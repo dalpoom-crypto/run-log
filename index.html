@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RunArchive - 러닝 기록 아카이브</title>
+  <title>RunLog - 러닝 기록 아카이브</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -11,15 +11,11 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
     * {
-      font-family: 'Outfit', sans-serif;
-    }
-    
-    h1, h2, h3, h4, h5, h6 {
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Inter', sans-serif;
     }
     
     @keyframes fadeIn {
@@ -37,25 +33,123 @@
       animation: fadeIn 0.5s ease-out;
     }
     
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .slide-up {
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    @keyframes rollUp {
+      0% {
+        transform: translateY(0);
+      }
+      100% {
+        transform: translateY(-100%);
+      }
+    }
+    
+    .roll-animation {
+      animation: rollUp 0.5s ease-in-out;
+    }
+    
     ::-webkit-scrollbar {
       width: 8px;
     }
     
     ::-webkit-scrollbar-track {
-      background: #f1f1f1;
+      background: #f1f5f9;
     }
     
     ::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, #f97316, #ec4899);
+      background: #64748b;
       border-radius: 4px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(180deg, #ea580c, #db2777);
+      background: #475569;
+    }
+    
+    .image-upload-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .image-upload-container:hover {
+      border-color: #1e40af;
+      background-color: #f8fafc;
+    }
+    
+    .image-upload-container.has-image {
+      border: none;
+    }
+    
+    .image-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .upload-placeholder {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #94a3b8;
     }
   </style>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            },
+            navy: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              300: '#cbd5e1',
+              400: '#94a3b8',
+              500: '#64748b',
+              600: '#475569',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+            }
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body>
+<body class="bg-navy-50">
   <div id="root"></div>
 
   <!-- Firebase -->
@@ -67,7 +161,9 @@
       signInWithEmailAndPassword,
       signOut,
       onAuthStateChanged,
-      updateProfile
+      updateProfile,
+      updatePassword,
+      sendPasswordResetEmail
     } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
     import { 
       getFirestore, 
@@ -78,6 +174,9 @@
       orderBy, 
       getDocs,
       doc,
+      getDoc,
+      setDoc,
+      updateDoc,
       deleteDoc,
       Timestamp 
     } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
@@ -108,6 +207,8 @@
       signOut,
       onAuthStateChanged,
       updateProfile,
+      updatePassword,
+      sendPasswordResetEmail,
       collection,
       addDoc,
       query,
@@ -115,6 +216,9 @@
       orderBy,
       getDocs,
       doc,
+      getDoc,
+      setDoc,
+      updateDoc,
       deleteDoc,
       Timestamp,
       ref,
@@ -123,13 +227,16 @@
     };
   </script>
 
+  <!-- Image Compression Library -->
+  <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.min.js"></script>
+
   <!-- React -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef } = React;
     const auth = window.firebaseAuth;
     const db = window.firebaseDb;
     const storage = window.firebaseStorage;
@@ -139,6 +246,8 @@
       signOut,
       onAuthStateChanged,
       updateProfile,
+      updatePassword,
+      sendPasswordResetEmail,
       collection,
       addDoc,
       query,
@@ -146,12 +255,24 @@
       orderBy,
       getDocs,
       doc,
+      getDoc,
+      setDoc,
+      updateDoc,
       deleteDoc,
       Timestamp,
       ref,
       uploadBytes,
       getDownloadURL
     } = window.firebaseModules;
+
+    // 임시 대회 데이터
+    const RACE_DATABASE = [
+      { id: 1, name: '서울국제마라톤', date: '2025-03-16' },
+      { id: 2, name: '동아마라톤', date: '2025-03-23' },
+      { id: 3, name: '중앙서울마라톤', date: '2025-11-03' },
+      { id: 4, name: '춘천마라톤', date: '2025-10-26' },
+      { id: 5, name: '대구국제마라톤', date: '2025-04-06' },
+    ];
 
     const RACE_TYPES = {
       '5K': 5,
@@ -190,13 +311,45 @@
       return 'CUSTOM';
     };
 
+    // 이미지 압축 함수
+    const compressImage = async (file) => {
+      const options = {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true
+      };
+      try {
+        return await imageCompression(file, options);
+      } catch (error) {
+        console.error('이미지 압축 실패:', error);
+        return file;
+      }
+    };
+
+    // 닉네임 중복 체크
+    const checkNicknameExists = async (nickname) => {
+      const q = query(collection(db, 'users'), where('nickname', '==', nickname));
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    };
+
+    // 비밀번호 유효성 검사
+    const validatePassword = (password) => {
+      const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
+      return regex.test(password);
+    };
+
     const AuthForm = ({ onAuthSuccess }) => {
       const [isLogin, setIsLogin] = useState(true);
       const [email, setEmail] = useState('');
       const [password, setPassword] = useState('');
-      const [displayName, setDisplayName] = useState('');
+      const [passwordConfirm, setPasswordConfirm] = useState('');
+      const [nickname, setNickname] = useState('');
       const [error, setError] = useState('');
       const [loading, setLoading] = useState(false);
+      const [showPasswordReset, setShowPasswordReset] = useState(false);
+      const [resetEmail, setResetEmail] = useState('');
+      const [showSuccessModal, setShowSuccessModal] = useState(false);
 
       const handleSubmit = async (e) => {
         e.preventDefault();
@@ -207,96 +360,246 @@
           if (isLogin) {
             await signInWithEmailAndPassword(auth, email, password);
           } else {
+            // 회원가입 유효성 검사
+            if (!validatePassword(password)) {
+              setError('비밀번호는 대소문자, 특수문자를 포함하여 8자 이상이어야 합니다.');
+              setLoading(false);
+              return;
+            }
+            
+            if (password !== passwordConfirm) {
+              setError('비밀번호가 일치하지 않습니다.');
+              setLoading(false);
+              return;
+            }
+
+            // 닉네임 중복 체크
+            const nicknameExists = await checkNicknameExists(nickname);
+            if (nicknameExists) {
+              setError('이미 사용 중인 닉네임입니다.');
+              setLoading(false);
+              return;
+            }
+
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            await updateProfile(userCredential.user, { displayName });
+            
+            // Firestore에 사용자 정보 저장
+            await setDoc(doc(db, 'users', userCredential.user.uid), {
+              nickname,
+              email,
+              createdAt: Timestamp.now()
+            });
+
+            await updateProfile(userCredential.user, { displayName: nickname });
+            
+            // 회원가입 성공 모달 표시
+            setShowSuccessModal(true);
+            setTimeout(() => {
+              setShowSuccessModal(false);
+              onAuthSuccess();
+            }, 2000);
           }
-          onAuthSuccess();
         } catch (err) {
-          setError(err.message);
+          if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+            setError('이메일 또는 비밀번호를 다시 한 번 확인해주세요.');
+          } else if (err.code === 'auth/email-already-in-use') {
+            setError('이미 사용 중인 이메일입니다.');
+          } else {
+            setError('오류가 발생했습니다. 다시 시도해주세요.');
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const handlePasswordReset = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+          await sendPasswordResetEmail(auth, resetEmail);
+          alert('비밀번호 재설정 이메일이 전송되었습니다.');
+          setShowPasswordReset(false);
+          setResetEmail('');
+        } catch (err) {
+          setError('이메일 전송에 실패했습니다. 이메일을 확인해주세요.');
         } finally {
           setLoading(false);
         }
       };
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600 p-4">
-          <div className="auth-card bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md transform hover:scale-105 transition-transform duration-300">
-            <div className="text-center mb-8">
-              <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-orange-500 to-pink-600 bg-clip-text text-transparent">
-                RunArchive
-              </h1>
-              <p className="text-gray-600 text-lg">당신의 러닝 여정을 기록하세요</p>
-            </div>
+        <>
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-800 via-navy-700 to-navy-600 p-4">
+            <div className="auth-card bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+              <div className="text-center mb-8">
+                <h1 className="text-4xl font-bold mb-2 text-navy-900">
+                  RunLog
+                </h1>
+                <p className="text-navy-600 text-base">당신의 러닝 여정을 기록하세요</p>
+              </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {!isLogin && (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {!isLogin && (
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">닉네임</label>
+                    <input
+                      type="text"
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none transition-colors"
+                      required
+                    />
+                  </div>
+                )}
+                
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">이름</label>
+                  <label className="block text-sm font-semibold text-navy-700 mb-2">이메일</label>
                   <input
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none transition-colors"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none transition-colors"
                     required
                   />
                 </div>
-              )}
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">이메일</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none transition-colors"
-                  required
-                />
-              </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">비밀번호</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none transition-colors"
-                  required
-                />
-              </div>
-
-              {error && (
-                <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm">
-                  {error}
+                <div>
+                  <label className="block text-sm font-semibold text-navy-700 mb-2">비밀번호</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none transition-colors"
+                    required
+                  />
+                  {!isLogin && (
+                    <p className="text-xs text-navy-500 mt-1">대소문자, 특수문자 포함 8자 이상</p>
+                  )}
                 </div>
-              )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold py-3 rounded-xl hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50"
-              >
-                {loading ? '처리중...' : (isLogin ? '로그인' : '회원가입')}
-              </button>
-            </form>
+                {!isLogin && (
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">비밀번호 확인</label>
+                    <input
+                      type="password"
+                      value={passwordConfirm}
+                      onChange={(e) => setPasswordConfirm(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none transition-colors"
+                      required
+                    />
+                  </div>
+                )}
 
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-gray-600 hover:text-orange-600 font-medium transition-colors"
-              >
-                {isLogin ? '계정이 없으신가요? 회원가입' : '이미 계정이 있으신가요? 로그인'}
-              </button>
+                {error && (
+                  <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-navy-700 text-white font-semibold py-3 rounded-lg hover:bg-navy-800 transition-colors disabled:opacity-50"
+                >
+                  {loading ? '처리중...' : (isLogin ? '로그인' : '회원가입')}
+                </button>
+              </form>
+
+              <div className="mt-6 text-center space-y-2">
+                <div className="text-sm text-navy-600">
+                  {isLogin ? '계정이 없으신가요? ' : '이미 계정이 있으신가요? '}
+                  <button
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      setError('');
+                    }}
+                    className="text-navy-700 font-semibold hover:text-navy-900 transition-colors"
+                  >
+                    {isLogin ? '회원가입' : '로그인'}
+                  </button>
+                </div>
+                
+                {isLogin && (
+                  <button
+                    onClick={() => setShowPasswordReset(true)}
+                    className="text-sm text-navy-600 hover:text-navy-800 transition-colors"
+                  >
+                    비밀번호 찾기
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* 비밀번호 재설정 모달 */}
+          {showPasswordReset && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-md slide-up">
+                <h2 className="text-2xl font-bold text-navy-900 mb-4">비밀번호 찾기</h2>
+                <form onSubmit={handlePasswordReset} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">이메일</label>
+                    <input
+                      type="email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                      placeholder="가입한 이메일을 입력하세요"
+                      required
+                    />
+                  </div>
+                  {error && (
+                    <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+                      {error}
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 bg-navy-700 text-white font-semibold py-3 rounded-lg hover:bg-navy-800 transition-colors"
+                    >
+                      전송
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPasswordReset(false);
+                        setResetEmail('');
+                        setError('');
+                      }}
+                      className="flex-1 bg-navy-100 text-navy-700 font-semibold py-3 rounded-lg hover:bg-navy-200 transition-colors"
+                    >
+                      취소
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* 회원가입 성공 모달 */}
+          {showSuccessModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl p-8 text-center slide-up">
+                <div className="text-6xl mb-4">🎉</div>
+                <h2 className="text-2xl font-bold text-navy-900 mb-2">환영합니다!</h2>
+                <p className="text-navy-600">회원가입이 완료되었습니다.</p>
+              </div>
+            </div>
+          )}
+        </>
       );
     };
 
-    const Profile = ({ user, onUpdateProfile }) => {
+    const Profile = ({ user, userData, onUpdateProfile }) => {
       const [isEditing, setIsEditing] = useState(false);
-      const [displayName, setDisplayName] = useState(user.displayName || '');
+      const [nickname, setNickname] = useState(userData?.nickname || user.displayName || '');
       const [photoFile, setPhotoFile] = useState(null);
       const [photoPreview, setPhotoPreview] = useState(user.photoURL || '');
+      const [loading, setLoading] = useState(false);
 
       const handlePhotoChange = (e) => {
         const file = e.target.files[0];
@@ -308,40 +611,60 @@
 
       const handleSave = async () => {
         try {
+          setLoading(true);
           let photoURL = user.photoURL;
           
           if (photoFile) {
+            const compressed = await compressImage(photoFile);
             const storageRef = ref(storage, `profiles/${user.uid}`);
-            await uploadBytes(storageRef, photoFile);
+            await uploadBytes(storageRef, compressed);
             photoURL = await getDownloadURL(storageRef);
           }
 
-          await updateProfile(auth.currentUser, { displayName, photoURL });
+          // 닉네임이 변경되었으면 중복 체크
+          if (nickname !== (userData?.nickname || user.displayName)) {
+            const nicknameExists = await checkNicknameExists(nickname);
+            if (nicknameExists) {
+              alert('이미 사용 중인 닉네임입니다.');
+              setLoading(false);
+              return;
+            }
+          }
+
+          await updateProfile(auth.currentUser, { displayName: nickname, photoURL });
+          await updateDoc(doc(db, 'users', user.uid), { nickname });
+          
           onUpdateProfile();
           setIsEditing(false);
         } catch (error) {
           console.error('프로필 업데이트 실패:', error);
+          alert('프로필 업데이트에 실패했습니다.');
+        } finally {
+          setLoading(false);
         }
       };
 
       return (
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <div className="flex items-center gap-6">
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <div className="flex items-center gap-4">
             <div className="relative">
-              <img
-                src={photoPreview || 'https://via.placeholder.com/120'}
-                alt="Profile"
-                className="w-24 h-24 rounded-full object-cover border-4 border-orange-200"
-              />
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-navy-100 border-2 border-navy-200 cursor-pointer" onClick={() => !isEditing && document.getElementById('profile-photo-input').click()}>
+                <img
+                  src={photoPreview || 'https://via.placeholder.com/80'}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              </div>
               {isEditing && (
-                <label className="absolute bottom-0 right-0 bg-orange-500 text-white rounded-full p-2 cursor-pointer hover:bg-orange-600 transition-colors">
+                <label className="absolute bottom-0 right-0 bg-navy-700 text-white rounded-full p-1.5 cursor-pointer hover:bg-navy-800 transition-colors">
                   <input
+                    id="profile-photo-input"
                     type="file"
                     accept="image/*"
                     onChange={handlePhotoChange}
                     className="hidden"
                   />
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -353,15 +676,15 @@
               {isEditing ? (
                 <input
                   type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-orange-500 focus:outline-none"
-                  placeholder="이름"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                  placeholder="닉네임"
                 />
               ) : (
                 <>
-                  <h2 className="text-2xl font-bold text-gray-800">{user.displayName}</h2>
-                  <p className="text-gray-600">{user.email}</p>
+                  <h2 className="text-xl font-bold text-navy-900">{userData?.nickname || user.displayName}</h2>
+                  <p className="text-sm text-navy-500 mt-1">대회 0 · 일상 0</p>
                 </>
               )}
             </div>
@@ -371,13 +694,18 @@
                 <div className="flex gap-2">
                   <button
                     onClick={handleSave}
-                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                    disabled={loading}
+                    className="px-4 py-2 bg-navy-700 text-white text-sm font-semibold rounded-lg hover:bg-navy-800 transition-colors disabled:opacity-50"
                   >
-                    저장
+                    {loading ? '저장중...' : '저장'}
                   </button>
                   <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setNickname(userData?.nickname || user.displayName || '');
+                      setPhotoPreview(user.photoURL || '');
+                    }}
+                    className="px-4 py-2 bg-navy-100 text-navy-700 text-sm font-semibold rounded-lg hover:bg-navy-200 transition-colors"
                   >
                     취소
                   </button>
@@ -385,7 +713,7 @@
               ) : (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2 bg-navy-100 text-navy-700 text-sm font-semibold rounded-lg hover:bg-navy-200 transition-colors"
                 >
                   프로필 수정
                 </button>
@@ -397,6 +725,9 @@
     };
 
     const PersonalRecords = ({ runs }) => {
+      const [currentIndex, setCurrentIndex] = useState(0);
+      const [isAnimating, setIsAnimating] = useState(false);
+
       const calculatePRs = () => {
         const prs = {};
         
@@ -409,64 +740,132 @@
           }
         });
         
-        return prs;
+        return Object.entries(prs).map(([type, run]) => ({ type, ...run }));
       };
 
       const prs = calculatePRs();
 
+      useEffect(() => {
+        if (prs.length > 1) {
+          const interval = setInterval(() => {
+            setIsAnimating(true);
+            setTimeout(() => {
+              setCurrentIndex((prev) => (prev + 1) % prs.length);
+              setIsAnimating(false);
+            }, 500);
+          }, 3000);
+          return () => clearInterval(interval);
+        }
+      }, [prs.length]);
+
+      if (prs.length === 0) {
+        return (
+          <div className="bg-gradient-to-br from-navy-50 to-navy-100 rounded-xl shadow-sm p-8 mb-6 text-center">
+            <div className="text-4xl mb-2">🏆</div>
+            <h2 className="text-lg font-bold text-navy-900 mb-1">개인 최고 기록</h2>
+            <p className="text-sm text-navy-600">첫 기록을 추가해보세요!</p>
+          </div>
+        );
+      }
+
+      const currentPR = prs[currentIndex];
+
       return (
-        <div className="bg-gradient-to-br from-orange-50 to-pink-50 rounded-2xl shadow-lg p-6 mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="text-3xl">🏆</span>
+        <div className="bg-gradient-to-br from-navy-50 to-navy-100 rounded-xl shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-bold text-navy-900 mb-4 flex items-center gap-2">
+            <span className="text-2xl">🏆</span>
             개인 최고 기록
           </h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(RACE_TYPES).filter(([type]) => type !== 'CUSTOM').map(([type, distance]) => {
-              const pr = prs[type];
-              return (
-                <div key={type} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="text-sm font-semibold text-gray-500 mb-1">{type}</div>
-                  <div className="text-sm text-gray-400 mb-2">{distance}km</div>
-                  {pr ? (
-                    <>
-                      <div className="text-2xl font-bold text-orange-600">{formatTime(pr.time)}</div>
-                      <div className="text-xs text-gray-500 mt-1">{calculatePace(pr.distance, pr.time)}/km</div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {new Date(pr.date).toLocaleDateString('ko-KR')}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-gray-400 text-sm">기록 없음</div>
-                  )}
-                </div>
-              );
-            })}
+          <div className="bg-white rounded-lg p-6 shadow-sm overflow-hidden" style={{ height: '120px' }}>
+            <div className={isAnimating ? 'roll-animation' : ''}>
+              <div className="text-sm font-semibold text-navy-600 mb-1">{currentPR.type}</div>
+              <div className="text-3xl font-bold text-navy-900 mb-2">{formatTime(currentPR.time)}</div>
+              <div className="text-sm text-navy-600">{calculatePace(currentPR.distance, currentPR.time)}/km</div>
+              <div className="text-xs text-navy-500 mt-2">
+                {new Date(currentPR.date).toLocaleDateString('ko-KR')}
+                {currentPR.raceName && ` · ${currentPR.raceName}`}
+              </div>
+            </div>
           </div>
+          
+          {prs.length > 1 && (
+            <div className="flex justify-center gap-1 mt-3">
+              {prs.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                    idx === currentIndex ? 'bg-navy-700' : 'bg-navy-300'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       );
     };
 
     const AddRunForm = ({ user, onRunAdded }) => {
       const [isOpen, setIsOpen] = useState(false);
+      const [runType, setRunType] = useState('race'); // 'race' or 'casual'
       const [formData, setFormData] = useState({
         date: new Date().toISOString().split('T')[0],
-        distance: '',
+        distanceType: '5K',
+        customDistance: '',
         hours: '0',
         minutes: '0',
         seconds: '0',
         location: '',
+        raceName: '',
+        isCustomRace: false,
         memo: '',
-        isPublic: false
+        isPublic: true
       });
+      const [certificateFile, setCertificateFile] = useState(null);
+      const [certificatePreview, setCertificatePreview] = useState('');
       const [photos, setPhotos] = useState([]);
       const [photoPreviews, setPhotoPreviews] = useState([]);
+      const [availableRaces, setAvailableRaces] = useState([]);
       const [loading, setLoading] = useState(false);
 
-      const handlePhotoChange = (e) => {
+      useEffect(() => {
+        if (runType === 'race' && formData.date) {
+          const races = RACE_DATABASE.filter(race => race.date === formData.date);
+          setAvailableRaces(races);
+        }
+      }, [runType, formData.date]);
+
+      const handlePhotoChange = async (e) => {
         const files = Array.from(e.target.files);
-        setPhotos(files);
-        setPhotoPreviews(files.map(file => URL.createObjectURL(file)));
+        if (photos.length + files.length > 3) {
+          alert('사진은 최대 3장까지만 업로드 가능합니다.');
+          return;
+        }
+        
+        setPhotos([...photos, ...files]);
+        const previews = await Promise.all(files.map(file => {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+          });
+        }));
+        setPhotoPreviews([...photoPreviews, ...previews]);
+      };
+
+      const handleCertificateChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          setCertificateFile(file);
+          const reader = new FileReader();
+          reader.onloadend = () => setCertificatePreview(reader.result);
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const removePhoto = (index) => {
+        setPhotos(photos.filter((_, i) => i !== index));
+        setPhotoPreviews(photoPreviews.filter((_, i) => i !== index));
       };
 
       const handleSubmit = async (e) => {
@@ -477,42 +876,73 @@
           const totalSeconds = parseInt(formData.hours) * 3600 + 
                               parseInt(formData.minutes) * 60 + 
                               parseInt(formData.seconds);
-          const distance = parseFloat(formData.distance);
           
+          let distance;
+          let raceType;
+          
+          if (formData.distanceType === 'CUSTOM') {
+            distance = parseFloat(formData.customDistance);
+            raceType = 'CUSTOM';
+          } else {
+            distance = RACE_TYPES[formData.distanceType];
+            raceType = formData.distanceType;
+          }
+
+          // 기록증 업로드
+          let certificateURL = '';
+          if (certificateFile) {
+            const compressed = await compressImage(certificateFile);
+            const certRef = ref(storage, `certificates/${user.uid}/${Date.now()}_certificate`);
+            await uploadBytes(certRef, compressed);
+            certificateURL = await getDownloadURL(certRef);
+          }
+
+          // 사진 업로드
           const photoURLs = [];
           for (const photo of photos) {
-            const photoRef = ref(storage, `runs/${user.uid}/${Date.now()}_${photo.name}`);
-            await uploadBytes(photoRef, photo);
+            const compressed = await compressImage(photo);
+            const photoRef = ref(storage, `runs/${user.uid}/${Date.now()}_${Math.random()}`);
+            await uploadBytes(photoRef, compressed);
             const url = await getDownloadURL(photoRef);
             photoURLs.push(url);
           }
 
           const runData = {
             userId: user.uid,
+            runType,
             date: formData.date,
             distance,
             time: totalSeconds,
             pace: calculatePace(distance, totalSeconds),
-            location: formData.location,
+            location: runType === 'casual' ? formData.location : '',
+            raceName: runType === 'race' ? formData.raceName : '',
+            isCustomRace: formData.isCustomRace,
             memo: formData.memo,
+            certificateURL,
             photos: photoURLs,
             isPublic: formData.isPublic,
-            raceType: determineRaceType(distance),
+            raceType,
             createdAt: Timestamp.now()
           };
 
           await addDoc(collection(db, 'runs'), runData);
           
+          // 폼 초기화
           setFormData({
             date: new Date().toISOString().split('T')[0],
-            distance: '',
+            distanceType: '5K',
+            customDistance: '',
             hours: '0',
             minutes: '0',
             seconds: '0',
             location: '',
+            raceName: '',
+            isCustomRace: false,
             memo: '',
-            isPublic: false
+            isPublic: true
           });
+          setCertificateFile(null);
+          setCertificatePreview('');
           setPhotos([]);
           setPhotoPreviews([]);
           setIsOpen(false);
@@ -529,21 +959,21 @@
         <>
           <button
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center justify-center z-50"
+            className="fixed bottom-8 right-8 w-14 h-14 bg-navy-700 text-white rounded-full shadow-xl hover:bg-navy-800 transition-all duration-300 flex items-center justify-center z-50"
           >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
           </button>
 
           {isOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+              <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl my-8">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-3xl font-bold text-gray-800">새 기록 추가</h2>
+                  <h2 className="text-2xl font-bold text-navy-900">새 기록 추가</h2>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-navy-400 hover:text-navy-600 transition-colors"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -552,34 +982,127 @@
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">날짜</label>
-                      <input
-                        type="date"
-                        value={formData.date}
-                        onChange={(e) => setFormData({...formData, date: e.target.value})}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">거리 (km)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.distance}
-                        onChange={(e) => setFormData({...formData, distance: e.target.value})}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none"
-                        placeholder="5.0"
-                        required
-                      />
+                  {/* 대회/일상 선택 */}
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">구분</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setRunType('race')}
+                        className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+                          runType === 'race'
+                            ? 'bg-navy-700 text-white'
+                            : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                        }`}
+                      >
+                        대회
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRunType('casual')}
+                        className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+                          runType === 'casual'
+                            ? 'bg-navy-700 text-white'
+                            : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                        }`}
+                      >
+                        일상
+                      </button>
                     </div>
                   </div>
 
+                  {/* 날짜 */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">기록 시간</label>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">날짜</label>
+                    <input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({...formData, date: e.target.value})}
+                      className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  {/* 대회명 (대회일 경우) */}
+                  {runType === 'race' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-navy-700 mb-2">대회명</label>
+                      {availableRaces.length > 0 && !formData.isCustomRace ? (
+                        <select
+                          value={formData.raceName}
+                          onChange={(e) => setFormData({...formData, raceName: e.target.value})}
+                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                          required
+                        >
+                          <option value="">대회를 선택하세요</option>
+                          {availableRaces.map(race => (
+                            <option key={race.id} value={race.name}>{race.name}</option>
+                          ))}
+                          <option value="__custom__">직접 입력</option>
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={formData.raceName}
+                          onChange={(e) => setFormData({...formData, raceName: e.target.value, isCustomRace: true})}
+                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                          placeholder="대회명을 입력하세요"
+                          required
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* 장소 (일상일 경우) */}
+                  {runType === 'casual' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-navy-700 mb-2">장소</label>
+                      <input
+                        type="text"
+                        value={formData.location}
+                        onChange={(e) => setFormData({...formData, location: e.target.value})}
+                        className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                        placeholder="올림픽공원"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* 거리 */}
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">거리</label>
+                    <div className="grid grid-cols-5 gap-2 mb-2">
+                      {['5K', '10K', 'HALF', 'FULL', 'CUSTOM'].map(type => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setFormData({...formData, distanceType: type})}
+                          className={`py-2 rounded-lg font-semibold text-sm transition-colors ${
+                            formData.distanceType === type
+                              ? 'bg-navy-700 text-white'
+                              : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                          }`}
+                        >
+                          {type === 'CUSTOM' ? '직접입력' : type}
+                        </button>
+                      ))}
+                    </div>
+                    {formData.distanceType === 'CUSTOM' && (
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.customDistance}
+                        onChange={(e) => setFormData({...formData, customDistance: e.target.value})}
+                        className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                        placeholder="거리 입력 (km)"
+                        required
+                      />
+                    )}
+                  </div>
+
+                  {/* 시간 */}
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">기록 시간</label>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <input
@@ -587,10 +1110,9 @@
                           min="0"
                           value={formData.hours}
                           onChange={(e) => setFormData({...formData, hours: e.target.value})}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none text-center"
-                          placeholder="0"
+                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-center"
                         />
-                        <div className="text-xs text-gray-500 text-center mt-1">시간</div>
+                        <div className="text-xs text-navy-500 text-center mt-1">시간</div>
                       </div>
                       <div>
                         <input
@@ -599,10 +1121,9 @@
                           max="59"
                           value={formData.minutes}
                           onChange={(e) => setFormData({...formData, minutes: e.target.value})}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none text-center"
-                          placeholder="0"
+                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-center"
                         />
-                        <div className="text-xs text-gray-500 text-center mt-1">분</div>
+                        <div className="text-xs text-navy-500 text-center mt-1">분</div>
                       </div>
                       <div>
                         <input
@@ -611,72 +1132,138 @@
                           max="59"
                           value={formData.seconds}
                           onChange={(e) => setFormData({...formData, seconds: e.target.value})}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none text-center"
-                          placeholder="0"
+                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-center"
                         />
-                        <div className="text-xs text-gray-500 text-center mt-1">초</div>
+                        <div className="text-xs text-navy-500 text-center mt-1">초</div>
                       </div>
                     </div>
                   </div>
 
+                  {/* 기록증 (대회일 경우) */}
+                  {runType === 'race' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-navy-700 mb-2">기록증</label>
+                      <div className="image-upload-container" onClick={() => !certificatePreview && document.getElementById('certificate-input').click()}>
+                        {certificatePreview ? (
+                          <div className="relative w-full h-full">
+                            <img src={certificatePreview} alt="Certificate" className="image-preview" />
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCertificateFile(null);
+                                setCertificatePreview('');
+                              }}
+                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="upload-placeholder">
+                            <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            <p className="text-sm">기록증 추가</p>
+                          </div>
+                        )}
+                      </div>
+                      <input
+                        id="certificate-input"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCertificateChange}
+                        className="hidden"
+                      />
+                    </div>
+                  )}
+
+                  {/* 사진 */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">장소</label>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">사진 (최대 3장)</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {photoPreviews.map((preview, idx) => (
+                        <div key={idx} className="image-upload-container has-image">
+                          <img src={preview} alt={`Photo ${idx}`} className="image-preview" />
+                          <button
+                            type="button"
+                            onClick={() => removePhoto(idx)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                      {photos.length < 3 && (
+                        <div className="image-upload-container" onClick={() => document.getElementById('photo-input').click()}>
+                          <div className="upload-placeholder">
+                            <svg className="w-10 h-10 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            <p className="text-xs">사진 추가</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <input
-                      type="text"
-                      value={formData.location}
-                      onChange={(e) => setFormData({...formData, location: e.target.value})}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none"
-                      placeholder="서울어린이대공원"
-                      required
+                      id="photo-input"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoChange}
+                      className="hidden"
                     />
                   </div>
 
+                  {/* 메모 */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">메모 / 감정</label>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">메모</label>
                     <textarea
                       value={formData.memo}
                       onChange={(e) => setFormData({...formData, memo: e.target.value})}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none"
+                      className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
                       rows="3"
                       placeholder="오늘의 달리기는 어땠나요?"
                     />
                   </div>
 
+                  {/* 공개 여부 */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">사진</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handlePhotoChange}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none"
-                    />
-                    {photoPreviews.length > 0 && (
-                      <div className="grid grid-cols-3 gap-2 mt-3">
-                        {photoPreviews.map((preview, idx) => (
-                          <img key={idx} src={preview} alt={`Preview ${idx}`} className="w-full h-24 object-cover rounded-lg" />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="isPublic"
-                      checked={formData.isPublic}
-                      onChange={(e) => setFormData({...formData, isPublic: e.target.checked})}
-                      className="w-5 h-5 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
-                    />
-                    <label htmlFor="isPublic" className="text-sm font-medium text-gray-700">
-                      이 기록을 공개합니다
-                    </label>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">공개 설정</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({...formData, isPublic: true})}
+                        className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+                          formData.isPublic
+                            ? 'bg-navy-700 text-white'
+                            : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                        }`}
+                      >
+                        공개
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({...formData, isPublic: false})}
+                        className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+                          !formData.isPublic
+                            ? 'bg-navy-700 text-white'
+                            : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                        }`}
+                      >
+                        비공개
+                      </button>
+                    </div>
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold py-4 rounded-xl hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50"
+                    className="w-full bg-navy-700 text-white font-semibold py-4 rounded-lg hover:bg-navy-800 transition-colors disabled:opacity-50"
                   >
                     {loading ? '저장 중...' : '기록 저장'}
                   </button>
@@ -702,85 +1289,96 @@
       };
 
       return (
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 mb-6">
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300 mb-4">
           {run.photos && run.photos.length > 0 && (
             <div className="relative">
               <img
                 src={run.photos[0]}
                 alt="Run"
-                className="w-full h-80 object-cover"
+                className="w-full h-64 object-cover"
               />
               {run.photos.length > 1 && (
-                <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                <div className="absolute top-3 right-3 bg-black bg-opacity-60 text-white px-2 py-1 rounded-full text-xs font-semibold">
                   +{run.photos.length - 1}
                 </div>
               )}
             </div>
           )}
 
-          <div className="p-6">
-            <div className="flex justify-between items-start mb-4">
+          <div className="p-5">
+            <div className="flex justify-between items-start mb-3">
               <div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-1">{run.location}</h3>
-                <p className="text-gray-500 text-sm">{new Date(run.date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <h3 className="text-lg font-bold text-navy-900 mb-1">
+                  {run.runType === 'race' ? run.raceName : run.location}
+                </h3>
+                <p className="text-sm text-navy-500">
+                  {new Date(run.date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
               </div>
               <div className="flex gap-2">
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  run.runType === 'race' 
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-green-100 text-green-700'
+                }`}>
+                  {run.runType === 'race' ? '대회' : '일상'}
+                </span>
                 {run.raceType !== 'CUSTOM' && (
-                  <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-sm font-semibold">
+                  <span className="px-2 py-1 bg-navy-100 text-navy-700 rounded-full text-xs font-semibold">
                     {run.raceType}
                   </span>
                 )}
                 {!run.isPublic && (
-                  <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-semibold">
-                    🔒 비공개
+                  <span className="px-2 py-1 bg-navy-100 text-navy-600 rounded-full text-xs font-semibold">
+                    🔒
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-4 p-4 bg-gradient-to-r from-orange-50 to-pink-50 rounded-xl">
+            <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-navy-50 rounded-lg">
               <div>
-                <div className="text-sm text-gray-600 mb-1">거리</div>
-                <div className="text-2xl font-bold text-orange-600">{run.distance}km</div>
+                <div className="text-xs text-navy-600 mb-1">거리</div>
+                <div className="text-lg font-bold text-navy-900">{run.distance}km</div>
               </div>
               <div>
-                <div className="text-sm text-gray-600 mb-1">시간</div>
-                <div className="text-2xl font-bold text-pink-600">{formatTime(run.time)}</div>
+                <div className="text-xs text-navy-600 mb-1">시간</div>
+                <div className="text-lg font-bold text-navy-900">{formatTime(run.time)}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-600 mb-1">페이스</div>
-                <div className="text-2xl font-bold text-purple-600">{run.pace}/km</div>
+                <div className="text-xs text-navy-600 mb-1">페이스</div>
+                <div className="text-lg font-bold text-navy-900">{run.pace}/km</div>
               </div>
             </div>
 
             {run.memo && (
-              <p className="text-gray-700 mb-4 p-4 bg-gray-50 rounded-xl italic">
-                "{run.memo}"
+              <p className="text-sm text-navy-700 mb-3 p-3 bg-navy-50 rounded-lg">
+                {run.memo}
               </p>
             )}
 
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="text-red-500 hover:text-red-700 text-sm font-medium transition-colors"
+              className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
             >
               삭제
             </button>
 
             {showDeleteConfirm && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-2xl p-6 max-w-sm">
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">기록 삭제</h3>
-                  <p className="text-gray-600 mb-4">이 기록을 정말 삭제하시겠습니까?</p>
+                <div className="bg-white rounded-xl p-6 max-w-sm slide-up">
+                  <h3 className="text-lg font-bold text-navy-900 mb-2">기록 삭제</h3>
+                  <p className="text-navy-600 mb-4 text-sm">이 기록을 정말 삭제하시겠습니까?</p>
                   <div className="flex gap-2">
                     <button
                       onClick={handleDelete}
-                      className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors"
+                      className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold"
                     >
                       삭제
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                      className="flex-1 bg-navy-100 text-navy-700 py-2 rounded-lg hover:bg-navy-200 transition-colors text-sm font-semibold"
                     >
                       취소
                     </button>
@@ -793,9 +1391,196 @@
       );
     };
 
-    const Feed = ({ user }) => {
+    const SettingsModal = ({ user, userData, onClose, onSignOut }) => {
+      const [activeTab, setActiveTab] = useState('account');
+      const [nickname, setNickname] = useState(userData?.nickname || user.displayName || '');
+      const [currentPassword, setCurrentPassword] = useState('');
+      const [newPassword, setNewPassword] = useState('');
+      const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const handleNicknameUpdate = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+          if (nickname !== (userData?.nickname || user.displayName)) {
+            const nicknameExists = await checkNicknameExists(nickname);
+            if (nicknameExists) {
+              setError('이미 사용 중인 닉네임입니다.');
+              setLoading(false);
+              return;
+            }
+          }
+
+          await updateProfile(auth.currentUser, { displayName: nickname });
+          await updateDoc(doc(db, 'users', user.uid), { nickname });
+          
+          alert('닉네임이 변경되었습니다.');
+          window.location.reload();
+        } catch (err) {
+          setError('닉네임 변경에 실패했습니다.');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const handlePasswordUpdate = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+          if (!validatePassword(newPassword)) {
+            setError('비밀번호는 대소문자, 특수문자를 포함하여 8자 이상이어야 합니다.');
+            setLoading(false);
+            return;
+          }
+
+          if (newPassword !== newPasswordConfirm) {
+            setError('새 비밀번호가 일치하지 않습니다.');
+            setLoading(false);
+            return;
+          }
+
+          // 재인증 필요
+          await signInWithEmailAndPassword(auth, user.email, currentPassword);
+          await updatePassword(auth.currentUser, newPassword);
+          
+          alert('비밀번호가 변경되었습니다.');
+          setCurrentPassword('');
+          setNewPassword('');
+          setNewPasswordConfirm('');
+        } catch (err) {
+          if (err.code === 'auth/wrong-password') {
+            setError('현재 비밀번호가 일치하지 않습니다.');
+          } else {
+            setError('비밀번호 변경에 실패했습니다.');
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md slide-up">
+            <div className="flex justify-between items-center p-6 border-b border-navy-100">
+              <h2 className="text-xl font-bold text-navy-900">더보기</h2>
+              <button
+                onClick={onClose}
+                className="text-navy-400 hover:text-navy-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex border-b border-navy-100">
+              <button
+                onClick={() => setActiveTab('account')}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+                  activeTab === 'account'
+                    ? 'text-navy-900 border-b-2 border-navy-700'
+                    : 'text-navy-500 hover:text-navy-700'
+                }`}
+              >
+                개인 정보 수정
+              </button>
+            </div>
+
+            <div className="p-6">
+              {activeTab === 'account' && (
+                <div className="space-y-6">
+                  {/* 닉네임 변경 */}
+                  <form onSubmit={handleNicknameUpdate} className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-semibold text-navy-700 mb-2">닉네임</label>
+                      <input
+                        type="text"
+                        value={nickname}
+                        onChange={(e) => setNickname(e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-navy-700 text-white py-2 rounded-lg hover:bg-navy-800 transition-colors text-sm font-semibold disabled:opacity-50"
+                    >
+                      {loading ? '변경 중...' : '닉네임 변경'}
+                    </button>
+                  </form>
+
+                  <div className="border-t border-navy-100 pt-6">
+                    <h3 className="text-sm font-semibold text-navy-700 mb-3">비밀번호 변경</h3>
+                    <form onSubmit={handlePasswordUpdate} className="space-y-3">
+                      <input
+                        type="password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
+                        placeholder="현재 비밀번호"
+                        required
+                      />
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
+                        placeholder="새 비밀번호"
+                        required
+                      />
+                      <input
+                        type="password"
+                        value={newPasswordConfirm}
+                        onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
+                        placeholder="새 비밀번호 확인"
+                        required
+                      />
+                      <p className="text-xs text-navy-500">대소문자, 특수문자 포함 8자 이상</p>
+                      
+                      {error && (
+                        <div className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs">
+                          {error}
+                        </div>
+                      )}
+                      
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-navy-700 text-white py-2 rounded-lg hover:bg-navy-800 transition-colors text-sm font-semibold disabled:opacity-50"
+                      >
+                        {loading ? '변경 중...' : '비밀번호 변경'}
+                      </button>
+                    </form>
+                  </div>
+
+                  <div className="border-t border-navy-100 pt-6">
+                    <button
+                      onClick={onSignOut}
+                      className="w-full bg-red-50 text-red-600 py-2 rounded-lg hover:bg-red-100 transition-colors text-sm font-semibold"
+                    >
+                      로그아웃
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const Feed = ({ user, userData }) => {
       const [runs, setRuns] = useState([]);
       const [loading, setLoading] = useState(true);
+      const [showSettings, setShowSettings] = useState(false);
 
       const loadRuns = async () => {
         try {
@@ -822,47 +1607,6 @@
         loadRuns();
       }, [user]);
 
-      return (
-        <div>
-          <PersonalRecords runs={runs} />
-          
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
-              <p className="mt-4 text-gray-600">기록을 불러오는 중...</p>
-            </div>
-          ) : runs.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-2xl shadow-lg">
-              <div className="text-6xl mb-4">🏃</div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">아직 기록이 없습니다</h3>
-              <p className="text-gray-600">첫 번째 달리기 기록을 추가해보세요!</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {runs.map(run => (
-                <RunCard key={run.id} run={run} onDelete={loadRuns} />
-              ))}
-            </div>
-          )}
-
-          <AddRunForm user={user} onRunAdded={loadRuns} />
-        </div>
-      );
-    };
-
-    const App = () => {
-      const [user, setUser] = useState(null);
-      const [loading, setLoading] = useState(true);
-
-      useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-          setUser(user);
-          setLoading(false);
-        });
-
-        return () => unsubscribe();
-      }, []);
-
       const handleSignOut = async () => {
         try {
           await signOut(auth);
@@ -871,10 +1615,83 @@
         }
       };
 
+      return (
+        <div>
+          <PersonalRecords runs={runs} />
+          
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-navy-700 border-t-transparent"></div>
+              <p className="mt-4 text-navy-600 text-sm">기록을 불러오는 중...</p>
+            </div>
+          ) : runs.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+              <div className="text-5xl mb-3">🏃</div>
+              <h3 className="text-lg font-bold text-navy-900 mb-2">아직 기록이 없습니다</h3>
+              <p className="text-sm text-navy-600">첫 번째 달리기 기록을 추가해보세요!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {runs.map(run => (
+                <RunCard key={run.id} run={run} onDelete={loadRuns} />
+              ))}
+            </div>
+          )}
+
+          <AddRunForm user={user} onRunAdded={loadRuns} />
+
+          {showSettings && (
+            <SettingsModal
+              user={user}
+              userData={userData}
+              onClose={() => setShowSettings(false)}
+              onSignOut={handleSignOut}
+            />
+          )}
+
+          {/* 더보기 버튼 */}
+          <button
+            onClick={() => setShowSettings(true)}
+            className="fixed top-6 right-6 text-navy-700 hover:text-navy-900 transition-colors z-40"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </svg>
+          </button>
+        </div>
+      );
+    };
+
+    const App = () => {
+      const [user, setUser] = useState(null);
+      const [userData, setUserData] = useState(null);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          setUser(user);
+          
+          if (user) {
+            try {
+              const userDoc = await getDoc(doc(db, 'users', user.uid));
+              if (userDoc.exists()) {
+                setUserData(userDoc.data());
+              }
+            } catch (error) {
+              console.error('사용자 데이터 로드 실패:', error);
+            }
+          }
+          
+          setLoading(false);
+        });
+
+        return () => unsubscribe();
+      }, []);
+
       if (loading) {
         return (
-          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600">
-            <div className="text-white text-2xl font-bold">Loading...</div>
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-800 via-navy-700 to-navy-600">
+            <div className="text-white text-xl font-semibold">Loading...</div>
           </div>
         );
       }
@@ -884,24 +1701,18 @@
       }
 
       return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50">
+        <div className="min-h-screen bg-navy-50">
           <header className="bg-white shadow-sm sticky top-0 z-40">
-            <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-pink-600 bg-clip-text text-transparent">
-                RunArchive
+            <div className="max-w-4xl mx-auto px-4 py-4">
+              <h1 className="text-2xl font-bold text-navy-900">
+                RunLog
               </h1>
-              <button
-                onClick={handleSignOut}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-              >
-                로그아웃
-              </button>
             </div>
           </header>
 
-          <main className="max-w-4xl mx-auto px-4 py-8">
-            <Profile user={user} onUpdateProfile={() => window.location.reload()} />
-            <Feed user={user} />
+          <main className="max-w-4xl mx-auto px-4 py-6">
+            <Profile user={user} userData={userData} onUpdateProfile={() => window.location.reload()} />
+            <Feed user={user} userData={userData} />
           </main>
         </div>
       );
