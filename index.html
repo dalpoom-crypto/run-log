@@ -5,78 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RunLog - 러닝 기록 아카이브</title>
   
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    * {
-      font-family: 'Inter', sans-serif;
-    }
+    * { font-family: 'Inter', sans-serif; }
     
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     
-    .auth-card {
-      animation: fadeIn 0.5s ease-out;
-    }
+    .auth-card { animation: fadeIn 0.5s ease-out; }
     
     @keyframes slideUp {
-      from {
-        transform: translateY(20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
     
-    .slide-up {
-      animation: slideUp 0.3s ease-out;
-    }
+    .slide-up { animation: slideUp 0.3s ease-out; }
     
-    @keyframes rollUp {
-      0% {
-        transform: translateY(0);
-      }
-      100% {
-        transform: translateY(-100%);
-      }
-    }
-    
-    .roll-animation {
-      animation: rollUp 0.5s ease-in-out;
-    }
-    
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: #64748b;
-      border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
-    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #64748b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
     
     .image-upload-container {
       position: relative;
@@ -94,9 +49,7 @@
       background-color: #f8fafc;
     }
     
-    .image-upload-container.has-image {
-      border: none;
-    }
+    .image-upload-container.has-image { border: none; }
     
     .image-preview {
       width: 100%;
@@ -120,92 +73,6 @@
       color: white;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
-
-    .feed-card-image {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1;
-      overflow: hidden;
-      background: #f1f5f9;
-    }
-
-    .feed-card-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .carousel-container {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1;
-      overflow: hidden;
-    }
-
-    .carousel-images {
-      display: flex;
-      transition: transform 0.3s ease-in-out;
-      height: 100%;
-    }
-
-    .carousel-image {
-      min-width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .carousel-button {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(0, 0, 0, 0.5);
-      color: white;
-      border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 10;
-    }
-
-    .carousel-button:hover {
-      background: rgba(0, 0, 0, 0.7);
-    }
-
-    .carousel-button.prev {
-      left: 8px;
-    }
-
-    .carousel-button.next {
-      right: 8px;
-    }
-
-    .carousel-dots {
-      position: absolute;
-      bottom: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 6px;
-      z-index: 10;
-    }
-
-    .carousel-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.5);
-      transition: all 0.3s;
-    }
-
-    .carousel-dot.active {
-      background: white;
-      width: 20px;
-      border-radius: 3px;
-    }
   </style>
   
   <script>
@@ -213,29 +80,10 @@
       theme: {
         extend: {
           colors: {
-            primary: {
-              50: '#f0f9ff',
-              100: '#e0f2fe',
-              200: '#bae6fd',
-              300: '#7dd3fc',
-              400: '#38bdf8',
-              500: '#0ea5e9',
-              600: '#0284c7',
-              700: '#0369a1',
-              800: '#075985',
-              900: '#0c4a6e',
-            },
             navy: {
-              50: '#f8fafc',
-              100: '#f1f5f9',
-              200: '#e2e8f0',
-              300: '#cbd5e1',
-              400: '#94a3b8',
-              500: '#64748b',
-              600: '#475569',
-              700: '#334155',
-              800: '#1e293b',
-              900: '#0f172a',
+              50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1',
+              400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155',
+              800: '#1e293b', 900: '#0f172a',
             }
           }
         }
@@ -246,45 +94,18 @@
 <body class="bg-navy-50">
   <div id="root"></div>
 
-  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
     import { 
-      getAuth, 
-      createUserWithEmailAndPassword, 
-      signInWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged,
-      updateProfile,
-      updatePassword,
-      sendPasswordResetEmail,
-      deleteUser,
-      EmailAuthProvider,
-      reauthenticateWithCredential
+      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      signOut, onAuthStateChanged, updateProfile, sendPasswordResetEmail
     } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
     import { 
-      getFirestore, 
-      collection, 
-      addDoc, 
-      query, 
-      where, 
-      orderBy, 
-      getDocs,
-      doc,
-      getDoc,
-      setDoc,
-      updateDoc,
-      deleteDoc,
-      writeBatch,
-      Timestamp 
+      getFirestore, collection, addDoc, query, where, orderBy, getDocs,
+      doc, getDoc, setDoc, updateDoc, deleteDoc, Timestamp 
     } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
     import { 
-      getStorage, 
-      ref, 
-      uploadBytes, 
-      getDownloadURL,
-      deleteObject,
-      listAll
+      getStorage, ref, uploadBytes, getDownloadURL
     } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js';
 
     const firebaseConfig = {
@@ -294,7 +115,6 @@
       storageBucket: "run-log-31420.firebasestorage.app",
       messagingSenderId: "325067679087",
       appId: "1:325067679087:web:727201211a34ac6c1fb49a",
-      measurementId: "G-ZR1WW86K4Z"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -302,82 +122,32 @@
     window.firebaseDb = getFirestore(app);
     window.firebaseStorage = getStorage(app);
     window.firebaseModules = {
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged,
-      updateProfile,
-      updatePassword,
-      sendPasswordResetEmail,
-      deleteUser,
-      EmailAuthProvider,
-      reauthenticateWithCredential,
-      collection,
-      addDoc,
-      query,
-      where,
-      orderBy,
-      getDocs,
-      doc,
-      getDoc,
-      setDoc,
-      updateDoc,
-      deleteDoc,
-      writeBatch,
-      Timestamp,
-      ref,
-      uploadBytes,
-      getDownloadURL,
-      deleteObject,
-      listAll
+      createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
+      onAuthStateChanged, updateProfile, sendPasswordResetEmail,
+      collection, addDoc, query, where, orderBy, getDocs, doc, getDoc,
+      setDoc, updateDoc, deleteDoc, Timestamp,
+      ref, uploadBytes, getDownloadURL
     };
   </script>
 
-  <!-- Image Compression Library -->
   <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.min.js"></script>
-
-  <!-- React -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect } = React;
     const auth = window.firebaseAuth;
     const db = window.firebaseDb;
     const storage = window.firebaseStorage;
     const {
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged,
-      updateProfile,
-      updatePassword,
-      sendPasswordResetEmail,
-      deleteUser,
-      EmailAuthProvider,
-      reauthenticateWithCredential,
-      collection,
-      addDoc,
-      query,
-      where,
-      orderBy,
-      getDocs,
-      doc,
-      getDoc,
-      setDoc,
-      updateDoc,
-      deleteDoc,
-      writeBatch,
-      Timestamp,
-      ref,
-      uploadBytes,
-      getDownloadURL,
-      deleteObject,
-      listAll
+      createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
+      onAuthStateChanged, updateProfile, sendPasswordResetEmail,
+      collection, addDoc, query, where, orderBy, getDocs, doc, getDoc,
+      setDoc, updateDoc, deleteDoc, Timestamp,
+      ref, uploadBytes, getDownloadURL
     } = window.firebaseModules;
 
-    // 임시 대회 데이터
     const RACE_DATABASE = [
       { id: 1, name: '서울국제마라톤', date: '2025-03-16' },
       { id: 2, name: '동아마라톤', date: '2025-03-23' },
@@ -423,7 +193,6 @@
       return 'CUSTOM';
     };
 
-    // 이미지 압축 함수
     const compressImage = async (file) => {
       const options = {
         maxSizeMB: 0.5,
@@ -438,14 +207,12 @@
       }
     };
 
-    // 닉네임 중복 체크
     const checkNicknameExists = async (nickname) => {
       const usersRef = collection(db, 'users');
       const snapshot = await getDocs(usersRef);
       return snapshot.docs.some(doc => doc.data().nickname === nickname);
     };
 
-    // 비밀번호 유효성 검사
     const validatePassword = (password) => {
       const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
       return regex.test(password);
@@ -576,9 +343,7 @@
           <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-800 via-navy-700 to-navy-600 p-4">
             <div className="auth-card bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
               <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold mb-2 text-navy-900">
-                  RunLog
-                </h1>
+                <h1 className="text-4xl font-bold mb-2 text-navy-900">RunLog</h1>
                 <p className="text-navy-600 text-base">당신의 러닝 여정을 기록하세요</p>
               </div>
 
@@ -756,9 +521,7 @@
       );
     };
 
-    // Profile 컴포넌트는 다음 메시지에서 계속...
-
-    const Profile = ({ user, userData, onUpdateProfile }) => {
+    const Profile = ({ user, userData }) => {
       return (
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
           <div className="flex items-start gap-6">
@@ -783,11 +546,9 @@
 
     const PersonalRecords = ({ runs }) => {
       const [currentIndex, setCurrentIndex] = useState(0);
-      const [isAnimating, setIsAnimating] = useState(false);
 
       const calculatePRs = () => {
         const prs = {};
-        
         runs.forEach(run => {
           const type = run.raceType;
           if (type !== 'CUSTOM' && type) {
@@ -796,7 +557,6 @@
             }
           }
         });
-        
         return Object.entries(prs).map(([type, run]) => ({ type, ...run }));
       };
 
@@ -805,11 +565,7 @@
       useEffect(() => {
         if (prs.length > 1) {
           const interval = setInterval(() => {
-            setIsAnimating(true);
-            setTimeout(() => {
-              setCurrentIndex((prev) => (prev + 1) % prs.length);
-              setIsAnimating(false);
-            }, 500);
+            setCurrentIndex((prev) => (prev + 1) % prs.length);
           }, 3000);
           return () => clearInterval(interval);
         }
@@ -829,7 +585,7 @@
 
       return (
         <div className="pr-card mb-6">
-          <div className="text-center mb-4">
+          <div className="text-center">
             <div className="text-sm font-semibold opacity-90 mb-1">{currentPR.type}</div>
             <div className="text-4xl font-bold mb-2">{formatTime(currentPR.time)}</div>
             <div className="text-sm opacity-90">
@@ -839,7 +595,7 @@
           </div>
           
           {prs.length > 1 && (
-            <div className="flex justify-center gap-1">
+            <div className="flex justify-center gap-1 mt-4">
               {prs.map((_, idx) => (
                 <div
                   key={idx}
@@ -854,79 +610,19 @@
       );
     };
 
-    const ImageCarousel = ({ images }) => {
-      const [currentIndex, setCurrentIndex] = useState(0);
-
-      const goToPrevious = () => {
-        setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-      };
-
-      const goToNext = () => {
-        setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-      };
-
-      if (!images || images.length === 0) return null;
-      if (images.length === 1) {
-        return <img src={images[0]} alt="Run" className="w-full h-full object-cover" />;
-      }
-
+    const RunCard = ({ run, onClick }) => {
       return (
-        <>
-          <div className="carousel-images" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
-            {images.map((img, idx) => (
-              <img key={idx} src={img} alt={`Run ${idx + 1}`} className="carousel-image" />
-            ))}
-          </div>
-          
-          {currentIndex > 0 && (
-            <button className="carousel-button prev" onClick={goToPrevious}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          )}
-          
-          {currentIndex < images.length - 1 && (
-            <button className="carousel-button next" onClick={goToNext}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          )}
-
-          <div className="carousel-dots">
-            {images.map((_, idx) => (
-              <div
-                key={idx}
-                className={`carousel-dot ${idx === currentIndex ? 'active' : ''}`}
-              />
-            ))}
-          </div>
-        </>
-      );
-    };
-
-    const RunCard = ({ run, onDelete, onClick }) => {
-      const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-      const handleDelete = async () => {
-        try {
-          await deleteDoc(doc(db, 'runs', run.id));
-          onDelete();
-        } catch (error) {
-          console.error('삭제 실패:', error);
-          alert('기록 삭제에 실패했습니다.');
-        }
-      };
-
-      return (
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-4">
+        <div className="bg-white rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" onClick={onClick}>
           {run.photos && run.photos.length > 0 && (
-            <div className="carousel-container cursor-pointer" onClick={onClick}>
-              <ImageCarousel images={run.photos} />
+            <div className="relative w-full aspect-square">
+              <img
+                src={run.photos[0]}
+                alt="Run"
+                className="w-full h-full object-cover"
+              />
               
               {run.photos.length > 1 && (
-                <div className="absolute top-3 right-3 bg-black bg-opacity-60 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white px-2 py-0.5 rounded text-xs font-semibold flex items-center gap-1">
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
                   </svg>
@@ -935,214 +631,19 @@
               )}
 
               {run.runType === 'race' && (
-                <div className="absolute bottom-3 left-3 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">
+                <div className="absolute bottom-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-semibold">
                   대회
                 </div>
               )}
-            </div>
-          )}
 
-          <div className="p-4">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="text-base font-bold text-navy-900">
-                {run.runType === 'race' ? run.raceName : run.location}
-              </h3>
-            </div>
-
-            <div className="flex items-center gap-3 text-sm text-navy-600 mb-3">
-              <span className="font-semibold">{run.distance}km</span>
-              <span>·</span>
-              <span className="font-semibold">{formatTime(run.time)}</span>
-            </div>
-
-            <p className="text-xs text-navy-500">
-              {new Date(run.date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-          </div>
-        </div>
-      );
-    };
-
-    const RunDetailModal = ({ run, onClose, onDelete }) => {
-      const [currentImageIndex, setCurrentImageIndex] = useState(0);
-      const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-      const handleDelete = async () => {
-        try {
-          await deleteDoc(doc(db, 'runs', run.id));
-          onDelete();
-          onClose();
-        } catch (error) {
-          console.error('삭제 실패:', error);
-          alert('기록 삭제에 실패했습니다.');
-        }
-      };
-
-      const goToPrevious = () => {
-        setCurrentImageIndex((prev) => (prev === 0 ? run.photos.length - 1 : prev - 1));
-      };
-
-      const goToNext = () => {
-        setCurrentImageIndex((prev) => (prev === run.photos.length - 1 ? 0 : prev + 1));
-      };
-
-      const handleShare = () => {
-        alert('공유 기능은 추후 구현 예정입니다.');
-      };
-
-      return (
-        <div className="fixed inset-0 bg-black z-50 overflow-y-auto">
-          <div className="min-h-screen">
-            {/* 헤더 */}
-            <div className="sticky top-0 bg-white border-b border-navy-100 z-10">
-              <div className="flex items-center justify-between p-4">
-                <button onClick={onClose} className="text-navy-900">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <h2 className="text-lg font-bold text-navy-900">게시물</h2>
-                <button onClick={() => setShowDeleteConfirm(true)} className="text-red-500 text-sm font-semibold">
-                  삭제
-                </button>
-              </div>
-            </div>
-
-            {/* 이미지 캐러셀 */}
-            {run.photos && run.photos.length > 0 && (
-              <div className="relative w-full aspect-square bg-black">
-                <img
-                  src={run.photos[currentImageIndex]}
-                  alt="Run"
-                  className="w-full h-full object-contain"
-                />
-                
-                {run.photos.length > 1 && (
-                  <>
-                    {currentImageIndex > 0 && (
-                      <button
-                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white w-8 h-8 rounded-full flex items-center justify-center"
-                        onClick={goToPrevious}
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </button>
-                    )}
-                    
-                    {currentImageIndex < run.photos.length - 1 && (
-                      <button
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white w-8 h-8 rounded-full flex items-center justify-center"
-                        onClick={goToNext}
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    )}
-
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
-                      {run.photos.map((_, idx) => (
-                        <div
-                          key={idx}
-                          className={`w-1.5 h-1.5 rounded-full transition-all ${
-                            idx === currentImageIndex ? 'bg-white w-6' : 'bg-white bg-opacity-50'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* 정보 영역 */}
-            <div className="bg-white">
-              {/* 좋아요, 댓글, 공유 버튼 */}
-              <div className="flex items-center gap-4 px-4 py-3 border-b border-navy-100">
-                <button className="hover:opacity-60 transition-opacity">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </button>
-                <button className="hover:opacity-60 transition-opacity">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </button>
-                <button onClick={handleShare} className="hover:opacity-60 transition-opacity">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                  </svg>
-                </button>
-                <button className="ml-auto hover:opacity-60 transition-opacity">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* 게시물 정보 */}
-              <div className="px-4 py-3">
-                <div className="mb-3">
-                  <span className="font-bold text-navy-900 text-sm">
-                    {run.runType === 'race' ? run.raceName : run.location}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 mb-3 text-sm">
-                  <span className="px-2 py-1 bg-navy-100 text-navy-700 rounded font-semibold">
-                    {run.distance}km
-                  </span>
-                  <span className="px-2 py-1 bg-navy-100 text-navy-700 rounded font-semibold">
-                    {formatTime(run.time)}
-                  </span>
-                </div>
-
-                {run.memo && (
-                  <p className="text-sm text-navy-700 mb-3">{run.memo}</p>
-                )}
-
-                <p className="text-xs text-navy-500">
-                  {new Date(run.createdAt?.toDate ? run.createdAt.toDate() : run.createdAt).toLocaleDateString('ko-KR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {showDeleteConfirm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-xl p-6 max-w-sm slide-up">
-                <h3 className="text-lg font-bold text-navy-900 mb-2">기록 삭제</h3>
-                <p className="text-navy-600 mb-4 text-sm">이 기록을 정말 삭제하시겠습니까?</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleDelete}
-                    className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold"
-                  >
-                    삭제
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="flex-1 bg-navy-100 text-navy-700 py-2 rounded-lg hover:bg-navy-200 transition-colors text-sm font-semibold"
-                  >
-                    취소
-                  </button>
-                </div>
+              <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs font-semibold">
+                {run.distance}km · {formatTime(run.time)}
               </div>
             </div>
           )}
         </div>
       );
     };
-
-    // AddRunForm과 나머지 컴포넌트는 다음 파트에서 계속...
 
     const AddRunForm = ({ user, onRunAdded }) => {
       const [isOpen, setIsOpen] = useState(false);
@@ -1157,7 +658,6 @@
         location: '',
         raceName: '',
         isCustomRace: false,
-        customRaceName: '',
         memo: '',
         isPublic: true
       });
@@ -1165,7 +665,6 @@
       const [photoPreviews, setPhotoPreviews] = useState([]);
       const [availableRaces, setAvailableRaces] = useState([]);
       const [loading, setLoading] = useState(false);
-      const [showCustomRaceInput, setShowCustomRaceInput] = useState(false);
 
       useEffect(() => {
         if (runType === 'race' && formData.date) {
@@ -1197,17 +696,6 @@
         setPhotoPreviews(photoPreviews.filter((_, i) => i !== index));
       };
 
-      const handleRaceNameChange = (e) => {
-        const value = e.target.value;
-        if (value === '__custom__') {
-          setShowCustomRaceInput(true);
-          setFormData({...formData, raceName: '', isCustomRace: true});
-        } else {
-          setShowCustomRaceInput(false);
-          setFormData({...formData, raceName: value, isCustomRace: false});
-        }
-      };
-
       const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -1237,21 +725,6 @@
             photoURLs.push(url);
           }
 
-          let finalRaceName = formData.raceName;
-          if (runType === 'race' && formData.isCustomRace && formData.customRaceName) {
-            finalRaceName = formData.customRaceName;
-            
-            const raceExists = RACE_DATABASE.some(r => r.name === formData.customRaceName);
-            if (!raceExists) {
-              await addDoc(collection(db, 'customRaces'), {
-                name: formData.customRaceName,
-                date: formData.date,
-                userId: user.uid,
-                createdAt: Timestamp.now()
-              });
-            }
-          }
-
           const runData = {
             userId: user.uid,
             runType,
@@ -1260,7 +733,7 @@
             time: totalSeconds,
             pace: calculatePace(distance, totalSeconds),
             location: runType === 'casual' ? formData.location : '',
-            raceName: runType === 'race' ? finalRaceName : '',
+            raceName: runType === 'race' ? formData.raceName : '',
             isCustomRace: formData.isCustomRace,
             memo: formData.memo,
             photos: photoURLs,
@@ -1281,13 +754,11 @@
             location: '',
             raceName: '',
             isCustomRace: false,
-            customRaceName: '',
             memo: '',
             isPublic: true
           });
           setPhotos([]);
           setPhotoPreviews([]);
-          setShowCustomRaceInput(false);
           setIsOpen(false);
           onRunAdded();
         } catch (error) {
@@ -1312,18 +783,16 @@
           {isOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <div className="sticky top-0 bg-white border-b border-navy-100 p-6 z-10">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-navy-900">새 기록 추가</h2>
-                    <button
-                      onClick={() => setIsOpen(false)}
-                      className="text-navy-400 hover:text-navy-600 transition-colors"
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
+                <div className="flex justify-between items-center p-6 border-b border-navy-100">
+                  <h2 className="text-2xl font-bold text-navy-900">새 기록 추가</h2>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="text-navy-400 hover:text-navy-600 transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-5">
@@ -1369,41 +838,17 @@
                   {runType === 'race' && (
                     <div>
                       <label className="block text-sm font-semibold text-navy-700 mb-2">대회명</label>
-                      {!showCustomRaceInput ? (
-                        <select
-                          value={formData.raceName}
-                          onChange={handleRaceNameChange}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
-                          required
-                        >
-                          <option value="">대회를 선택하세요</option>
-                          {availableRaces.map(race => (
-                            <option key={race.id} value={race.name}>{race.name}</option>
-                          ))}
-                          <option value="__custom__">직접 입력</option>
-                        </select>
-                      ) : (
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            value={formData.customRaceName}
-                            onChange={(e) => setFormData({...formData, customRaceName: e.target.value})}
-                            className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
-                            placeholder="대회명을 입력하세요"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowCustomRaceInput(false);
-                              setFormData({...formData, raceName: '', customRaceName: '', isCustomRace: false});
-                            }}
-                            className="text-sm text-navy-600 hover:text-navy-800"
-                          >
-                            ← 목록에서 선택하기
-                          </button>
-                        </div>
-                      )}
+                      <select
+                        value={formData.raceName}
+                        onChange={(e) => setFormData({...formData, raceName: e.target.value})}
+                        className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                        required
+                      >
+                        <option value="">대회를 선택하세요</option>
+                        {availableRaces.map(race => (
+                          <option key={race.id} value={race.name}>{race.name}</option>
+                        ))}
+                      </select>
                     </div>
                   )}
 
@@ -1579,727 +1024,12 @@
             </div>
           )}
         </>
-      );
-    };
-
-    // SettingsModal 등 나머지 컴포넌트 계속...
-
-    const AddRunForm = ({ user, onRunAdded }) => {
-      const [isOpen, setIsOpen] = useState(false);
-      const [runType, setRunType] = useState('race');
-      const [formData, setFormData] = useState({
-        date: new Date().toISOString().split('T')[0],
-        distanceType: '5K',
-        customDistance: '',
-        hours: '0',
-        minutes: '0',
-        seconds: '0',
-        location: '',
-        raceName: '',
-        isCustomRace: false,
-        customRaceInput: '',
-        memo: '',
-        isPublic: true
-      });
-      const [photos, setPhotos] = useState([]);
-      const [photoPreviews, setPhotoPreviews] = useState([]);
-      const [availableRaces, setAvailableRaces] = useState([]);
-      const [showCustomRaceInput, setShowCustomRaceInput] = useState(false);
-      const [loading, setLoading] = useState(false);
-
-      useEffect(() => {
-        if (runType === 'race' && formData.date) {
-          const races = RACE_DATABASE.filter(race => race.date === formData.date);
-          setAvailableRaces(races);
-        }
-      }, [runType, formData.date]);
-
-      const handlePhotoChange = async (e) => {
-        const files = Array.from(e.target.files);
-        if (photos.length + files.length > 3) {
-          alert('사진은 최대 3장까지만 업로드 가능합니다.');
-          return;
-        }
-        
-        setPhotos([...photos, ...files]);
-        const previews = await Promise.all(files.map(file => {
-          return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-          });
-        }));
-        setPhotoPreviews([...photoPreviews, ...previews]);
-      };
-
-      const removePhoto = (index) => {
-        setPhotos(photos.filter((_, i) => i !== index));
-        setPhotoPreviews(photoPreviews.filter((_, i) => i !== index));
-      };
-
-      const handleRaceNameChange = (e) => {
-        const value = e.target.value;
-        if (value === '__custom__') {
-          setShowCustomRaceInput(true);
-          setFormData({...formData, raceName: '', isCustomRace: true});
-        } else {
-          setShowCustomRaceInput(false);
-          setFormData({...formData, raceName: value, isCustomRace: false});
-        }
-      };
-
-      const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-
-        try {
-          const totalSeconds = parseInt(formData.hours) * 3600 + 
-                              parseInt(formData.minutes) * 60 + 
-                              parseInt(formData.seconds);
-          
-          let distance;
-          let raceType;
-          
-          if (formData.distanceType === 'CUSTOM') {
-            distance = parseFloat(formData.customDistance);
-            raceType = 'CUSTOM';
-          } else {
-            distance = RACE_TYPES[formData.distanceType];
-            raceType = formData.distanceType;
-          }
-
-          let finalRaceName = formData.raceName;
-          if (runType === 'race' && formData.isCustomRace && formData.customRaceInput) {
-            finalRaceName = formData.customRaceInput;
-            
-            const raceExists = RACE_DATABASE.some(r => r.name === finalRaceName);
-            if (!raceExists) {
-              const newRaceRef = await addDoc(collection(db, 'customRaces'), {
-                name: finalRaceName,
-                date: formData.date,
-                createdBy: user.uid,
-                createdAt: Timestamp.now()
-              });
-            }
-          }
-
-          const photoURLs = [];
-          for (const photo of photos) {
-            const compressed = await compressImage(photo);
-            const photoRef = ref(storage, `runs/${user.uid}/${Date.now()}_${Math.random()}`);
-            await uploadBytes(photoRef, compressed);
-            const url = await getDownloadURL(photoRef);
-            photoURLs.push(url);
-          }
-
-          const runData = {
-            userId: user.uid,
-            runType,
-            date: formData.date,
-            distance,
-            time: totalSeconds,
-            pace: calculatePace(distance, totalSeconds),
-            location: runType === 'casual' ? formData.location : '',
-            raceName: runType === 'race' ? finalRaceName : '',
-            isCustomRace: formData.isCustomRace,
-            memo: formData.memo,
-            photos: photoURLs,
-            isPublic: formData.isPublic,
-            raceType,
-            createdAt: Timestamp.now()
-          };
-
-          await addDoc(collection(db, 'runs'), runData);
-          
-          setFormData({
-            date: new Date().toISOString().split('T')[0],
-            distanceType: '5K',
-            customDistance: '',
-            hours: '0',
-            minutes: '0',
-            seconds: '0',
-            location: '',
-            raceName: '',
-            isCustomRace: false,
-            customRaceInput: '',
-            memo: '',
-            isPublic: true
-          });
-          setPhotos([]);
-          setPhotoPreviews([]);
-          setShowCustomRaceInput(false);
-          setIsOpen(false);
-          onRunAdded();
-        } catch (error) {
-          console.error('기록 추가 실패:', error);
-          alert('기록 추가에 실패했습니다.');
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      return (
-        <>
-          <button
-            onClick={() => setIsOpen(true)}
-            className="fixed bottom-8 right-8 w-14 h-14 bg-navy-700 text-white rounded-full shadow-xl hover:bg-navy-800 transition-all duration-300 flex items-center justify-center z-50"
-          >
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-          </button>
-
-          {isOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <div className="sticky top-0 bg-white border-b border-navy-100 p-6 z-10">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-navy-900">새 기록 추가</h2>
-                    <button
-                      onClick={() => setIsOpen(false)}
-                      className="text-navy-400 hover:text-navy-600 transition-colors"
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-navy-700 mb-2">구분</label>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setRunType('race')}
-                        className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
-                          runType === 'race'
-                            ? 'bg-navy-700 text-white'
-                            : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
-                        }`}
-                      >
-                        대회
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRunType('casual')}
-                        className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
-                          runType === 'casual'
-                            ? 'bg-navy-700 text-white'
-                            : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
-                        }`}
-                      >
-                        일상
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-navy-700 mb-2">날짜</label>
-                    <input
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) => setFormData({...formData, date: e.target.value})}
-                      className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
-                      required
-                    />
-                  </div>
-
-                  {runType === 'race' && (
-                    <div>
-                      <label className="block text-sm font-semibold text-navy-700 mb-2">대회명</label>
-                      {!showCustomRaceInput ? (
-                        <select
-                          value={formData.raceName}
-                          onChange={handleRaceNameChange}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
-                          required
-                        >
-                          <option value="">대회를 선택하세요</option>
-                          {availableRaces.map(race => (
-                            <option key={race.id} value={race.name}>{race.name}</option>
-                          ))}
-                          <option value="__custom__">직접 입력</option>
-                        </select>
-                      ) : (
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            value={formData.customRaceInput}
-                            onChange={(e) => setFormData({...formData, customRaceInput: e.target.value})}
-                            className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
-                            placeholder="대회명을 입력하세요"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowCustomRaceInput(false);
-                              setFormData({...formData, raceName: '', customRaceInput: '', isCustomRace: false});
-                            }}
-                            className="text-sm text-navy-600 hover:text-navy-800"
-                          >
-                            ← 목록에서 선택하기
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {runType === 'casual' && (
-                    <div>
-                      <label className="block text-sm font-semibold text-navy-700 mb-2">장소</label>
-                      <input
-                        type="text"
-                        value={formData.location}
-                        onChange={(e) => setFormData({...formData, location: e.target.value})}
-                        className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
-                        placeholder="올림픽공원"
-                        required
-                      />
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="block text-sm font-semibold text-navy-700 mb-2">거리</label>
-                    <div className="grid grid-cols-5 gap-2 mb-2">
-                      {['5K', '10K', 'HALF', 'FULL', 'CUSTOM'].map(type => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => setFormData({...formData, distanceType: type})}
-                          className={`py-2 rounded-lg font-semibold text-sm transition-colors ${
-                            formData.distanceType === type
-                              ? 'bg-navy-700 text-white'
-                              : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
-                          }`}
-                        >
-                          {type === 'CUSTOM' ? '직접입력' : type}
-                        </button>
-                      ))}
-                    </div>
-                    {formData.distanceType === 'CUSTOM' && (
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={formData.customDistance}
-                        onChange={(e) => setFormData({...formData, customDistance: e.target.value})}
-                        className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
-                        placeholder="거리 입력 (km)"
-                        required
-                      />
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-navy-700 mb-2">기록 시간</label>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <input
-                          type="number"
-                          min="0"
-                          value={formData.hours}
-                          onChange={(e) => setFormData({...formData, hours: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-center"
-                        />
-                        <div className="text-xs text-navy-500 text-center mt-1">시간</div>
-                      </div>
-                      <div>
-                        <input
-                          type="number"
-                          min="0"
-                          max="59"
-                          value={formData.minutes}
-                          onChange={(e) => setFormData({...formData, minutes: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-center"
-                        />
-                        <div className="text-xs text-navy-500 text-center mt-1">분</div>
-                      </div>
-                      <div>
-                        <input
-                          type="number"
-                          min="0"
-                          max="59"
-                          value={formData.seconds}
-                          onChange={(e) => setFormData({...formData, seconds: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-center"
-                        />
-                        <div className="text-xs text-navy-500 text-center mt-1">초</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-navy-700 mb-2">사진 (최대 3장)</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {photoPreviews.map((preview, idx) => (
-                        <div key={idx} className="image-upload-container has-image">
-                          <img src={preview} alt={`Photo ${idx}`} className="image-preview" />
-                          <button
-                            type="button"
-                            onClick={() => removePhoto(idx)}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
-                      {photos.length < 3 && (
-                        <div className="image-upload-container" onClick={() => document.getElementById('photo-input').click()}>
-                          <div className="upload-placeholder">
-                            <svg className="w-10 h-10 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            <p className="text-xs">사진 추가</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <input
-                      id="photo-input"
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handlePhotoChange}
-                      className="hidden"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-navy-700 mb-2">메모</label>
-                    <textarea
-                      value={formData.memo}
-                      onChange={(e) => setFormData({...formData, memo: e.target.value})}
-                      className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
-                      rows="3"
-                      placeholder="오늘의 달리기는 어땠나요?"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-navy-700 mb-2">공개 설정</label>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setFormData({...formData, isPublic: true})}
-                        className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
-                          formData.isPublic
-                            ? 'bg-navy-700 text-white'
-                            : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
-                        }`}
-                      >
-                        공개
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFormData({...formData, isPublic: false})}
-                        className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
-                          !formData.isPublic
-                            ? 'bg-navy-700 text-white'
-                            : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
-                        }`}
-                      >
-                        비공개
-                      </button>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-navy-700 text-white font-semibold py-4 rounded-lg hover:bg-navy-800 transition-colors disabled:opacity-50"
-                  >
-                    {loading ? '저장 중...' : '기록 저장'}
-                  </button>
-                </form>
-              </div>
-            </div>
-          )}
-        </>
-      );
-    };
-
-    // 계속...
-
-    const SettingsModal = ({ user, userData, onClose, onSignOut }) => {
-      const [activeTab, setActiveTab] = useState('account');
-      const [nickname, setNickname] = useState(userData?.nickname || user.displayName || '');
-      const [currentPassword, setCurrentPassword] = useState('');
-      const [newPassword, setNewPassword] = useState('');
-      const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
-      const [deletePassword, setDeletePassword] = useState('');
-      const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-      const [error, setError] = useState('');
-      const [loading, setLoading] = useState(false);
-
-      const handleNicknameUpdate = async (e) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-
-        try {
-          if (nickname !== (userData?.nickname || user.displayName)) {
-            const nicknameExists = await checkNicknameExists(nickname);
-            if (nicknameExists) {
-              setError('이미 사용 중인 닉네임입니다.');
-              setLoading(false);
-              return;
-            }
-          }
-
-          await updateProfile(auth.currentUser, { displayName: nickname });
-          await updateDoc(doc(db, 'users', user.uid), { nickname });
-          
-          alert('닉네임이 변경되었습니다.');
-          window.location.reload();
-        } catch (err) {
-          setError('닉네임 변경에 실패했습니다.');
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      const handlePasswordUpdate = async (e) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-
-        try {
-          if (!validatePassword(newPassword)) {
-            setError('비밀번호는 대소문자, 특수문자를 포함하여 8자 이상이어야 합니다.');
-            setLoading(false);
-            return;
-          }
-
-          if (newPassword !== newPasswordConfirm) {
-            setError('새 비밀번호가 일치하지 않습니다.');
-            setLoading(false);
-            return;
-          }
-
-          const credential = EmailAuthProvider.credential(user.email, currentPassword);
-          await reauthenticateWithCredential(auth.currentUser, credential);
-          await updatePassword(auth.currentUser, newPassword);
-          
-          alert('비밀번호가 변경되었습니다.');
-          setCurrentPassword('');
-          setNewPassword('');
-          setNewPasswordConfirm('');
-        } catch (err) {
-          if (err.code === 'auth/wrong-password') {
-            setError('현재 비밀번호가 일치하지 않습니다.');
-          } else {
-            setError('비밀번호 변경에 실패했습니다.');
-          }
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      const handleDeleteAccount = async () => {
-        if (!deletePassword.trim()) {
-          setError('비밀번호를 입력해주세요.');
-          return;
-        }
-
-        setError('');
-        setLoading(true);
-
-        try {
-          const credential = EmailAuthProvider.credential(user.email, deletePassword);
-          await reauthenticateWithCredential(auth.currentUser, credential);
-
-          const runsQuery = query(collection(db, 'runs'), where('userId', '==', user.uid));
-          const runsSnapshot = await getDocs(runsQuery);
-          
-          const batch = writeBatch(db);
-          runsSnapshot.docs.forEach((doc) => {
-            batch.delete(doc.ref);
-          });
-          batch.delete(doc(db, 'users', user.uid));
-          await batch.commit();
-
-          const profileRef = ref(storage, `profiles/${user.uid}`);
-          try {
-            await deleteObject(profileRef);
-          } catch (e) {
-            console.log('프로필 사진 없음');
-          }
-
-          const runsRef = ref(storage, `runs/${user.uid}`);
-          try {
-            const runsList = await listAll(runsRef);
-            await Promise.all(runsList.items.map(item => deleteObject(item)));
-          } catch (e) {
-            console.log('러닝 사진 없음');
-          }
-
-          await deleteUser(auth.currentUser);
-          
-          alert('회원 탈퇴가 완료되었습니다.');
-        } catch (err) {
-          if (err.code === 'auth/wrong-password') {
-            setError('비밀번호가 일치하지 않습니다.');
-          } else {
-            setError('회원 탈퇴에 실패했습니다.');
-          }
-          setLoading(false);
-        }
-      };
-
-      return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md slide-up">
-            <div className="flex justify-between items-center p-6 border-b border-navy-100">
-              <h2 className="text-xl font-bold text-navy-900">더보기</h2>
-              <button
-                onClick={onClose}
-                className="text-navy-400 hover:text-navy-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="p-6">
-              <div className="space-y-6">
-                <form onSubmit={handleNicknameUpdate} className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-semibold text-navy-700 mb-2">닉네임</label>
-                    <input
-                      type="text"
-                      value={nickname}
-                      onChange={(e) => setNickname(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-navy-700 text-white py-2 rounded-lg hover:bg-navy-800 transition-colors text-sm font-semibold disabled:opacity-50"
-                  >
-                    {loading ? '변경 중...' : '닉네임 변경'}
-                  </button>
-                </form>
-
-                <div className="border-t border-navy-100 pt-6">
-                  <h3 className="text-sm font-semibold text-navy-700 mb-3">비밀번호 변경</h3>
-                  <form onSubmit={handlePasswordUpdate} className="space-y-3">
-                    <input
-                      type="password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
-                      placeholder="현재 비밀번호"
-                      required
-                    />
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
-                      placeholder="새 비밀번호"
-                      required
-                    />
-                    <input
-                      type="password"
-                      value={newPasswordConfirm}
-                      onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
-                      placeholder="새 비밀번호 확인"
-                      required
-                    />
-                    <p className="text-xs text-navy-500">대소문자, 특수문자 포함 8자 이상</p>
-                    
-                    {error && (
-                      <div className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs">
-                        {error}
-                      </div>
-                    )}
-                    
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full bg-navy-700 text-white py-2 rounded-lg hover:bg-navy-800 transition-colors text-sm font-semibold disabled:opacity-50"
-                    >
-                      {loading ? '변경 중...' : '비밀번호 변경'}
-                    </button>
-                  </form>
-                </div>
-
-                <div className="border-t border-navy-100 pt-6 space-y-2">
-                  <button
-                    onClick={onSignOut}
-                    className="w-full bg-navy-100 text-navy-700 py-2 rounded-lg hover:bg-navy-200 transition-colors text-sm font-semibold"
-                  >
-                    로그아웃
-                  </button>
-                  
-                  <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="w-full bg-red-50 text-red-600 py-2 rounded-lg hover:bg-red-100 transition-colors text-sm font-semibold"
-                  >
-                    회원 탈퇴
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {showDeleteConfirm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-xl p-6 max-w-sm slide-up">
-                <h3 className="text-lg font-bold text-navy-900 mb-2">회원 탈퇴</h3>
-                <p className="text-navy-600 mb-4 text-sm">
-                  회원 탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다. 정말 탈퇴하시겠습니까?
-                </p>
-                <input
-                  type="password"
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm mb-3"
-                  placeholder="비밀번호 입력"
-                />
-                {error && (
-                  <div className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs mb-3">
-                    {error}
-                  </div>
-                )}
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleDeleteAccount}
-                    disabled={loading}
-                    className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold disabled:opacity-50"
-                  >
-                    {loading ? '처리 중...' : '탈퇴'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowDeleteConfirm(false);
-                      setDeletePassword('');
-                      setError('');
-                    }}
-                    className="flex-1 bg-navy-100 text-navy-700 py-2 rounded-lg hover:bg-navy-200 transition-colors text-sm font-semibold"
-                  >
-                    취소
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
       );
     };
 
     const Feed = ({ user, userData }) => {
       const [runs, setRuns] = useState([]);
       const [loading, setLoading] = useState(true);
-      const [showSettings, setShowSettings] = useState(false);
       const [selectedRun, setSelectedRun] = useState(null);
 
       const loadRuns = async () => {
@@ -2355,9 +1085,8 @@
               {runs.map(run => (
                 <RunCard 
                   key={run.id} 
-                  run={run} 
-                  onDelete={loadRuns} 
-                  onClick={() => setSelectedRun(run)}
+                  run={run}
+                  onClick={() => alert('상세보기는 Step 2에서 추가됩니다!')}
                 />
               ))}
             </div>
@@ -2365,29 +1094,12 @@
 
           <AddRunForm user={user} onRunAdded={loadRuns} />
 
-          {showSettings && (
-            <SettingsModal
-              user={user}
-              userData={userData}
-              onClose={() => setShowSettings(false)}
-              onSignOut={handleSignOut}
-            />
-          )}
-
-          {selectedRun && (
-            <RunDetailModal
-              run={selectedRun}
-              onClose={() => setSelectedRun(null)}
-              onDelete={loadRuns}
-            />
-          )}
-
           <button
-            onClick={() => setShowSettings(true)}
+            onClick={handleSignOut}
             className="fixed top-6 right-6 text-navy-700 hover:text-navy-900 transition-colors z-40"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
           </button>
         </div>
@@ -2436,14 +1148,12 @@
         <div className="min-h-screen bg-navy-50">
           <header className="bg-white shadow-sm sticky top-0 z-40">
             <div className="max-w-4xl mx-auto px-4 py-4">
-              <h1 className="text-2xl font-bold text-navy-900">
-                RunLog
-              </h1>
+              <h1 className="text-2xl font-bold text-navy-900">RunLog</h1>
             </div>
           </header>
 
           <main className="max-w-4xl mx-auto px-4 py-6">
-            <Profile user={user} userData={userData} onUpdateProfile={() => window.location.reload()} />
+            <Profile user={user} userData={userData} />
             <Feed user={user} userData={userData} />
           </main>
         </div>
