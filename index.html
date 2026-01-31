@@ -855,7 +855,430 @@
       );
     };
 
-    const AddRunForm = ({ user, onRunAdded }) => {
+    const RunDetailModal = ({ run, onClose, onDelete, onEdit }) => {
+      const [currentImageIndex, setCurrentImageIndex] = useState(0);
+      const [showMenu, setShowMenu] = useState(false);
+      const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+      const goToPrevious = () => {
+        setCurrentImageIndex((prev) => (prev === 0 ? run.photos.length - 1 : prev - 1));
+      };
+
+      const goToNext = () => {
+        setCurrentImageIndex((prev) => (prev === run.photos.length - 1 ? 0 : prev + 1));
+      };
+
+      const handleDelete = async () => {
+        try {
+          await deleteDoc(doc(db, 'runs', run.id));
+          onDelete();
+          onClose();
+        } catch (error) {
+          console.error('삭제 실패:', error);
+          alert('기록 삭제에 실패했습니다.');
+        }
+      };
+
+      const handleShare = () => {
+        alert('공유 기능은 추후 구현 예정입니다.');
+      };
+
+      const getDistanceLabel = () => {
+        if (run.raceType === 'HALF') return 'HALF';
+        if (run.raceType === 'FULL') return 'FULL';
+        return `${run.distance}km`;
+      };
+
+      return (
+        <div className="fixed inset-0 bg-black z-50 overflow-y-auto">
+          <div className="min-h-screen">
+            <div className="sticky top-0 bg-black border-b border-gray-800 z-10">
+              <div className="flex items-center justify-between p-4">
+                <button onClick={onClose} className="text-white">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <h2 className="text-lg font-bold text-white">게시물</h2>
+                <div className="relative">
+                  <button onClick={() => setShowMenu(!showMenu)} className="text-white">
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    </svg>
+                  </button>
+                  {showMenu && (
+                    <div className="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-xl py-1 z-20">
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          onEdit(run);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-navy-900 hover:bg-navy-50"
+                      >
+                        수정
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          setShowDeleteConfirm(true);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {run.photos && run.photos.length > 0 && (
+              <div className="relative w-full aspect-square bg-black">
+                <img
+                  src={run.photos[currentImageIndex]}
+                  alt="Run"
+                  className="w-full h-full object-contain"
+                />
+                
+                {run.photos.length > 1 && (
+                  <>
+                    {currentImageIndex > 0 && (
+                      <button
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-opacity-70"
+                        onClick={goToPrevious}
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                    )}
+                    
+                    {currentImageIndex < run.photos.length - 1 && (
+                      <button
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-opacity-70"
+                        onClick={goToNext}
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    )}
+
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                      {run.photos.map((_, idx) => (
+                        <div
+                          key={idx}
+                          className={`w-1.5 h-1.5 rounded-full transition-all ${
+                            idx === currentImageIndex ? 'bg-white w-6' : 'bg-white bg-opacity-50'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="bg-black text-white">
+              <div className="flex items-center gap-4 px-4 py-3 border-b border-gray-800">
+                <button className="hover:opacity-60 transition-opacity">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </button>
+                <button className="hover:opacity-60 transition-opacity">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </button>
+                <button onClick={handleShare} className="hover:opacity-60 transition-opacity">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                </button>
+                <button className="ml-auto hover:opacity-60 transition-opacity">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="px-4 py-3">
+                <div className="mb-3">
+                  <span className="font-bold text-white text-base">
+                    {run.runType === 'race' ? run.raceName : run.location}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="px-3 py-1 bg-gray-800 text-white rounded-full text-sm font-semibold">
+                    {getDistanceLabel()}
+                  </span>
+                  <span className="px-3 py-1 bg-gray-800 text-white rounded-full text-sm font-semibold">
+                    {formatTime(run.time)}
+                  </span>
+                </div>
+
+                {run.memo && (
+                  <p className="text-sm text-gray-300 mb-3 leading-relaxed">{run.memo}</p>
+                )}
+
+                <p className="text-xs text-gray-500">
+                  {run.createdAt && new Date(run.createdAt.toDate ? run.createdAt.toDate() : run.createdAt).toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {showDeleteConfirm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl p-6 max-w-sm slide-up">
+                <h3 className="text-lg font-bold text-navy-900 mb-2">기록 삭제</h3>
+                <p className="text-navy-600 mb-4 text-sm">이 기록을 정말 삭제하시겠습니까?</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDelete}
+                    className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold"
+                  >
+                    삭제
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 bg-navy-100 text-navy-700 py-2 rounded-lg hover:bg-navy-200 transition-colors text-sm font-semibold"
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const RunDetailModal = ({ run, onClose, onDelete, onEdit }) => {
+      const [currentImageIndex, setCurrentImageIndex] = useState(0);
+      const [showMenu, setShowMenu] = useState(false);
+      const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+      const goToPrevious = () => {
+        setCurrentImageIndex((prev) => (prev === 0 ? run.photos.length - 1 : prev - 1));
+      };
+
+      const goToNext = () => {
+        setCurrentImageIndex((prev) => (prev === run.photos.length - 1 ? 0 : prev + 1));
+      };
+
+      const handleDelete = async () => {
+        try {
+          await deleteDoc(doc(db, 'runs', run.id));
+          onDelete();
+          onClose();
+        } catch (error) {
+          console.error('삭제 실패:', error);
+          alert('기록 삭제에 실패했습니다.');
+        }
+      };
+
+      const handleShare = () => {
+        alert('공유 기능은 추후 구현 예정입니다.');
+      };
+
+      const getDistanceLabel = () => {
+        if (run.raceType === 'HALF') return 'HALF';
+        if (run.raceType === 'FULL') return 'FULL';
+        return `${run.distance}km`;
+      };
+
+      return (
+        <div className="fixed inset-0 bg-black z-50 overflow-y-auto">
+          <div className="min-h-screen">
+            <div className="sticky top-0 bg-white border-b border-navy-100 z-10">
+              <div className="flex items-center justify-between p-4">
+                <button onClick={onClose} className="text-navy-900">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <h2 className="text-lg font-bold text-navy-900">게시물</h2>
+                <div className="relative">
+                  <button onClick={() => setShowMenu(!showMenu)} className="text-navy-900">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    </svg>
+                  </button>
+                  {showMenu && (
+                    <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-navy-200 py-2 w-32 z-20">
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          onEdit(run);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-navy-700 hover:bg-navy-50 transition-colors"
+                      >
+                        수정
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          setShowDeleteConfirm(true);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {run.photos && run.photos.length > 0 && (
+              <div className="relative w-full aspect-square bg-black">
+                <img
+                  src={run.photos[currentImageIndex]}
+                  alt="Run"
+                  className="w-full h-full object-contain"
+                />
+                
+                {run.photos.length > 1 && (
+                  <>
+                    {currentImageIndex > 0 && (
+                      <button
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all"
+                        onClick={goToPrevious}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                    )}
+                    
+                    {currentImageIndex < run.photos.length - 1 && (
+                      <button
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all"
+                        onClick={goToNext}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    )}
+
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                      {run.photos.map((_, idx) => (
+                        <div
+                          key={idx}
+                          className={`w-1.5 h-1.5 rounded-full transition-all ${
+                            idx === currentImageIndex ? 'bg-white w-6' : 'bg-white bg-opacity-50'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="bg-white">
+              <div className="flex items-center gap-4 px-4 py-3 border-b border-navy-100">
+                <button className="hover:opacity-60 transition-opacity">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </button>
+                <button className="hover:opacity-60 transition-opacity">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </button>
+                <button onClick={handleShare} className="hover:opacity-60 transition-opacity">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                </button>
+                <button className="ml-auto hover:opacity-60 transition-opacity">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="px-4 py-3">
+                <div className="mb-3">
+                  <span className="font-bold text-navy-900 text-base">
+                    {run.runType === 'race' ? run.raceName : run.location}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="px-3 py-1 bg-navy-100 text-navy-700 rounded-full text-sm font-semibold">
+                    {getDistanceLabel()}
+                  </span>
+                  <span className="px-3 py-1 bg-navy-100 text-navy-700 rounded-full text-sm font-semibold">
+                    {formatTime(run.time)}
+                  </span>
+                </div>
+
+                {run.memo && (
+                  <p className="text-sm text-navy-700 mb-3 leading-relaxed">{run.memo}</p>
+                )}
+
+                <p className="text-xs text-navy-500">
+                  {run.createdAt?.toDate ? 
+                    run.createdAt.toDate().toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }) :
+                    new Date(run.createdAt).toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {showDeleteConfirm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl p-6 max-w-sm slide-up">
+                <h3 className="text-lg font-bold text-navy-900 mb-2">기록 삭제</h3>
+                <p className="text-navy-600 mb-4 text-sm">이 기록을 정말 삭제하시겠습니까?</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDelete}
+                    className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold"
+                  >
+                    삭제
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 bg-navy-100 text-navy-700 py-2 rounded-lg hover:bg-navy-200 transition-colors text-sm font-semibold"
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const AddRunForm = ({ user, onRunAdded, editingRun, onEditComplete }) => {
       const [isOpen, setIsOpen] = useState(false);
       const [runType, setRunType] = useState('race');
       const [formData, setFormData] = useState({
@@ -876,6 +1299,33 @@
       const [loading, setLoading] = useState(false);
 
       useEffect(() => {
+        if (editingRun) {
+          setIsOpen(true);
+          setRunType(editingRun.runType);
+          
+          const timeHours = Math.floor(editingRun.time / 3600);
+          const timeMinutes = Math.floor((editingRun.time % 3600) / 60);
+          const timeSeconds = editingRun.time % 60;
+
+          setFormData({
+            date: editingRun.date,
+            distanceType: editingRun.raceType || 'CUSTOM',
+            customDistance: editingRun.raceType === 'CUSTOM' ? editingRun.distance.toString() : '',
+            hours: timeHours.toString(),
+            minutes: timeMinutes.toString(),
+            seconds: timeSeconds.toString(),
+            location: editingRun.location || '',
+            raceName: editingRun.raceName || '',
+            memo: editingRun.memo || '',
+            isPublic: editingRun.isPublic !== false
+          });
+
+          setPhotoPreviews(editingRun.photos || []);
+          setPhotos([]);
+        }
+      }, [editingRun]);
+
+      useEffect(() => {
         if (runType === 'race' && formData.date) {
           const races = RACE_DATABASE.filter(race => race.date === formData.date);
           setAvailableRaces(races);
@@ -884,7 +1334,9 @@
 
       const handlePhotoChange = async (e) => {
         const files = Array.from(e.target.files);
-        if (photos.length + files.length > 3) {
+        const currentPhotoCount = photoPreviews.length + photos.length;
+        
+        if (currentPhotoCount + files.length > 3) {
           alert('사진은 최대 3장까지만 업로드 가능합니다.');
           return;
         }
@@ -903,6 +1355,27 @@
       const removePhoto = (index) => {
         setPhotos(photos.filter((_, i) => i !== index));
         setPhotoPreviews(photoPreviews.filter((_, i) => i !== index));
+      };
+
+      const handleClose = () => {
+        setIsOpen(false);
+        setFormData({
+          date: new Date().toISOString().split('T')[0],
+          distanceType: '5K',
+          customDistance: '',
+          hours: '0',
+          minutes: '0',
+          seconds: '0',
+          location: '',
+          raceName: '',
+          memo: '',
+          isPublic: true
+        });
+        setPhotos([]);
+        setPhotoPreviews([]);
+        if (editingRun) {
+          onEditComplete();
+        }
       };
 
       const handleSubmit = async (e) => {
@@ -926,6 +1399,10 @@
           }
 
           const photoURLs = [];
+          
+          const existingPhotos = photoPreviews.filter(p => p.startsWith('http'));
+          photoURLs.push(...existingPhotos);
+          
           for (const photo of photos) {
             const compressed = await compressImage(photo);
             const photoRef = ref(storage, `runs/${user.uid}/${Date.now()}_${Math.random()}`);
@@ -947,30 +1424,21 @@
             photos: photoURLs,
             isPublic: formData.isPublic,
             raceType,
-            createdAt: Timestamp.now()
+            ...(editingRun ? {} : { createdAt: Timestamp.now() })
           };
 
-          await addDoc(collection(db, 'runs'), runData);
+          if (editingRun) {
+            await updateDoc(doc(db, 'runs', editingRun.id), runData);
+            onEditComplete();
+          } else {
+            await addDoc(collection(db, 'runs'), runData);
+            onRunAdded();
+          }
           
-          setFormData({
-            date: new Date().toISOString().split('T')[0],
-            distanceType: '5K',
-            customDistance: '',
-            hours: '0',
-            minutes: '0',
-            seconds: '0',
-            location: '',
-            raceName: '',
-            memo: '',
-            isPublic: true
-          });
-          setPhotos([]);
-          setPhotoPreviews([]);
-          setIsOpen(false);
-          onRunAdded();
+          handleClose();
         } catch (error) {
-          console.error('기록 추가 실패:', error);
-          alert('기록 추가에 실패했습니다.');
+          console.error('기록 저장 실패:', error);
+          alert('기록 저장에 실패했습니다.');
         } finally {
           setLoading(false);
         }
@@ -991,9 +1459,9 @@
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center p-6 border-b border-navy-100">
-                  <h2 className="text-2xl font-bold text-navy-900">새 기록 추가</h2>
+                  <h2 className="text-2xl font-bold text-navy-900">{editingRun ? '기록 수정' : '새 기록 추가'}</h2>
                   <button
-                    onClick={() => setIsOpen(false)}
+                    onClick={handleClose}
                     className="text-navy-400 hover:text-navy-600 transition-colors"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1224,7 +1692,7 @@
                     disabled={loading}
                     className="w-full bg-navy-700 text-white font-semibold py-4 rounded-lg hover:bg-navy-800 transition-colors disabled:opacity-50"
                   >
-                    {loading ? '저장 중...' : '기록 저장'}
+                    {loading ? '저장 중...' : (editingRun ? '수정 완료' : '기록 저장')}
                   </button>
                 </form>
               </div>
@@ -1238,6 +1706,8 @@
       const [runs, setRuns] = useState([]);
       const [loading, setLoading] = useState(true);
       const [showSettings, setShowSettings] = useState(false);
+      const [selectedRun, setSelectedRun] = useState(null);
+      const [editingRun, setEditingRun] = useState(null);
 
       const loadRuns = async () => {
         try {
@@ -1272,6 +1742,11 @@
         }
       };
 
+      const handleEdit = (run) => {
+        setSelectedRun(null);
+        setEditingRun(run);
+      };
+
       return (
         <div>
           <PersonalRecords runs={runs} />
@@ -1293,13 +1768,16 @@
                 <RunCard 
                   key={run.id} 
                   run={run}
-                  onClick={() => alert('상세보기는 Step 2에서 추가됩니다!')}
+                  onClick={() => setSelectedRun(run)}
                 />
               ))}
             </div>
           )}
 
-          <AddRunForm user={user} onRunAdded={loadRuns} />
+          <AddRunForm user={user} onRunAdded={loadRuns} editingRun={editingRun} onEditComplete={() => {
+            setEditingRun(null);
+            loadRuns();
+          }} />
 
           {showSettings && (
             <SettingsModal
@@ -1307,6 +1785,15 @@
               userData={userData}
               onClose={() => setShowSettings(false)}
               onSignOut={handleSignOut}
+            />
+          )}
+
+          {selectedRun && (
+            <RunDetailModal
+              run={selectedRun}
+              onClose={() => setSelectedRun(null)}
+              onDelete={loadRuns}
+              onEdit={handleEdit}
             />
           )}
 
