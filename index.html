@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RunLog - ëŸ¬ë‹ ê¸°ë¡ ì•„ì¹´ì´ë¸Œ</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .auth-card { animation: fadeIn 0.5s ease-out; }
+    
+    .modal-content { animation: scaleIn 0.3s ease-out; }
+    
+    @keyframes slideUp {
+      from { transform: translate(-50%, 20px); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
+    }
+
+    @keyframes slideDown {
+      from { transform: translate(-50%, 0); opacity: 1; }
+      to { transform: translate(-50%, 20px); opacity: 0; }
+    }
+    
+    .slide-up { animation: slideUp 0.3s ease-out; }
+    
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #64748b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    
+    .image-upload-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .image-upload-container:hover {
+      border-color: #1e40af;
+      background-color: #f8fafc;
+    }
+    
+    .image-upload-container.has-image { border: none; }
+    
+    .image-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .upload-placeholder {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #94a3b8;
+    }
+
+    .pr-card {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border-radius: 16px;
+      padding: 24px;
+      color: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ë°˜ì‘í˜• ë””ìžì¸ */
+    @media (max-width: 640px) {
+      /* ëª¨ë°”ì¼: ìµœëŒ€ ë„ˆë¹„ ì œí•œ ì œê±° */
+      .max-w-4xl {
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+
+      /* ëª¨ë°”ì¼: íŒ¨ë”© ì¡°ì • */
+      body {
+        padding: 0 !important;
+      }
+
+      /* í”„ë¡œí•„ ì¹´ë“œ íŒ¨ë”© */
+      .pr-card {
+        padding: 16px;
+        border-radius: 12px;
+      }
+
+      /* ì´ë¯¸ì§€ ì—…ë¡œë“œ ê·¸ë¦¬ë“œ ê°„ê²© */
+      .image-upload-container {
+        border-radius: 8px;
+      }
+
+      /* ëª¨ë‹¬ íŒ¨ë”© ì¡°ì • */
+      .slide-up {
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+    }
+
+    @media (max-width: 768px) {
+      /* íƒœë¸”ë¦¿: ì•½ê°„ì˜ ì—¬ë°± ìœ ì§€ */
+      .max-w-4xl {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+      }
+    }
+  </style>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1',
+              400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155',
+              800: '#1e293b', 900: '#0f172a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-navy-50">
+  <div id="root"></div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { 
+      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      signOut, onAuthStateChanged, updateProfile, updatePassword, sendPasswordResetEmail, deleteUser
+    } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+    import { 
+      getFirestore, collection, addDoc, query, where, orderBy, getDocs,
+      doc, getDoc, setDoc, updateDoc, deleteDoc, Timestamp 
+    } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { 
+      getStorage, ref, uploadBytes, getDownloadURL
+    } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA4KFdLVKVy6WdAfTGuLWDJsV_tcuNp7kw",
+      authDomain: "run-log-31420.firebaseapp.com",
+      projectId: "run-log-31420",
+      storageBucket: "run-log-31420.firebasestorage.app",
+      messagingSenderId: "325067679087",
+      appId: "1:325067679087:web:727201211a34ac6c1fb49a",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    window.firebaseAuth = getAuth(app);
+    window.firebaseDb = getFirestore(app);
+    window.firebaseStorage = getStorage(app);
+    window.firebaseModules = {
+      createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
+      onAuthStateChanged, updateProfile, updatePassword, sendPasswordResetEmail, deleteUser,
+      collection, addDoc, query, where, orderBy, getDocs, doc, getDoc,
+      setDoc, updateDoc, deleteDoc, Timestamp,
+      ref, uploadBytes, getDownloadURL
+    };
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const auth = window.firebaseAuth;
+    const db = window.firebaseDb;
+    const storage = window.firebaseStorage;
+    const {
+      createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
+      onAuthStateChanged, updateProfile, updatePassword, sendPasswordResetEmail, deleteUser,
+      collection, addDoc, query, where, orderBy, getDocs, doc, getDoc,
+      setDoc, updateDoc, deleteDoc, Timestamp,
+      ref, uploadBytes, getDownloadURL
+    } = window.firebaseModules;
+
+    const RACE_DATABASE = [
+      // 2025ë…„ ëŒ€íšŒ
+      { id: 1, name: 'ì„œìš¸êµ­ì œë§ˆë¼í†¤', date: '2025-03-16' },
+      { id: 2, name: 'ë™ì•„ë§ˆë¼í†¤', date: '2025-03-23' },
+      { id: 3, name: 'ëŒ€êµ¬êµ­ì œë§ˆë¼í†¤', date: '2025-04-06' },
+      { id: 4, name: 'ê²½ì£¼ë²šê½ƒë§ˆë¼í†¤', date: '2025-04-13' },
+      { id: 5, name: 'ì¶˜ì²œë§ˆë¼í†¤', date: '2025-10-26' },
+      { id: 6, name: 'ì¤‘ì•™ì„œìš¸ë§ˆë¼í†¤', date: '2025-11-03' },
+      { id: 7, name: 'ì¡°ì„ ì¼ë³´ì¶˜ì²œë§ˆë¼í†¤', date: '2025-10-26' },
+      
+      // 2024ë…„ ëŒ€íšŒ
+      { id: 11, name: 'ì„œìš¸êµ­ì œë§ˆë¼í†¤', date: '2024-03-17' },
+      { id: 12, name: 'ë™ì•„ë§ˆë¼í†¤', date: '2024-03-24' },
+      { id: 13, name: 'ëŒ€êµ¬êµ­ì œë§ˆë¼í†¤', date: '2024-04-07' },
+      { id: 14, name: 'ê²½ì£¼ë²šê½ƒë§ˆë¼í†¤', date: '2024-04-14' },
+      { id: 15, name: 'ì¶˜ì²œë§ˆë¼í†¤', date: '2024-10-27' },
+      { id: 16, name: 'ì¤‘ì•™ì„œìš¸ë§ˆë¼í†¤', date: '2024-11-03' },
+      { id: 17, name: 'ì¡°ì„ ì¼ë³´ì¶˜ì²œë§ˆë¼í†¤', date: '2024-10-27' },
+      { id: 18, name: 'í˜¸ë‚¨ë§ˆë¼í†¤', date: '2024-05-05' },
+      { id: 19, name: 'ì œì£¼êµ­ì œë§ˆë¼í†¤', date: '2024-03-10' },
+      
+      // 2023ë…„ ëŒ€íšŒ
+      { id: 21, name: 'ì„œìš¸êµ­ì œë§ˆë¼í†¤', date: '2023-03-19' },
+      { id: 22, name: 'ë™ì•„ë§ˆë¼í†¤', date: '2023-03-26' },
+      { id: 23, name: 'ëŒ€êµ¬êµ­ì œë§ˆë¼í†¤', date: '2023-04-02' },
+      { id: 24, name: 'ê²½ì£¼ë²šê½ƒë§ˆë¼í†¤', date: '2023-04-09' },
+      { id: 25, name: 'ì¶˜ì²œë§ˆë¼í†¤', date: '2023-10-29' },
+      { id: 26, name: 'ì¤‘ì•™ì„œìš¸ë§ˆë¼í†¤', date: '2023-11-05' },
+      { id: 27, name: 'ì¡°ì„ ì¼ë³´ì¶˜ì²œë§ˆë¼í†¤', date: '2023-10-29' },
+      { id: 28, name: 'í˜¸ë‚¨ë§ˆë¼í†¤', date: '2023-05-07' },
+      { id: 29, name: 'ì œì£¼êµ­ì œë§ˆë¼í†¤', date: '2023-03-12' },
+    ];
+
+    const RACE_TYPES = {
+      '5K': 5,
+      '10K': 10,
+      'HALF': 21.0975,
+      'FULL': 42.195,
+      'CUSTOM': null
+    };
+
+    const formatTime = (seconds) => {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      
+      if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }
+      return `${minutes}:${String(secs).padStart(2, '0')}`;
+    };
+
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}.${month}.${day}`;
+    };
+
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}.${month}.${day}`;
+    };
+
+    const calculatePace = (distanceKm, timeSeconds) => {
+      const paceSeconds = timeSeconds / distanceKm;
+      const minutes = Math.floor(paceSeconds / 60);
+      const seconds = Math.floor(paceSeconds % 60);
+      return `${minutes}:${String(seconds).padStart(2, '0')}`;
+    };
+
+    const compressImage = async (file) => {
+      const options = {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true
+      };
+      try {
+        return await imageCompression(file, options);
+      } catch (error) {
+        console.error('ì´ë¯¸ì§€ ì••ì¶• ì‹¤íŒ¨:', error);
+        return file;
+      }
+    };
+
+    const showToast = (message, type = 'success') => {
+      const toast = document.createElement('div');
+      toast.className = `fixed bottom-20 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg text-white font-medium z-50 animate-slide-up ${
+        type === 'success' ? 'bg-navy-700' : 
+        type === 'error' ? 'bg-red-500' : 
+        'bg-navy-700'
+      }`;
+      toast.textContent = message;
+      toast.style.animation = 'slideUp 0.3s ease-out';
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideDown 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+      }, 2000);
+    };
+
+    const checkNicknameExists = async (nickname) => {
+      const usersRef = collection(db, 'users');
+      const snapshot = await getDocs(usersRef);
+      return snapshot.docs.some(doc => doc.data().nickname === nickname);
+    };
+
+    const validatePassword = (password) => {
+      const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/;
+      return regex.test(password);
+    };
+
+    const AuthForm = ({ onAuthSuccess }) => {
+      const [isLogin, setIsLogin] = useState(true);
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [passwordConfirm, setPasswordConfirm] = useState('');
+      const [nickname, setNickname] = useState('');
+      const [nicknameChecked, setNicknameChecked] = useState(false);
+      const [nicknameCheckStatus, setNicknameCheckStatus] = useState('');
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [showPasswordReset, setShowPasswordReset] = useState(false);
+      const [resetEmail, setResetEmail] = useState('');
+      const [showSuccessModal, setShowSuccessModal] = useState(false);
+      const [showPassword, setShowPassword] = useState(false);
+      const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
+      const handleNicknameCheck = async () => {
+        if (!nickname.trim()) {
+          setError('ë‹‰ë„¤ìž„ì„ ìž…ë ¥í•´ì£¼ì„¸ìš”.');
+          return;
+        }
+
+        setNicknameCheckStatus('checking');
+        setError('');
+
+        try {
+          const exists = await checkNicknameExists(nickname);
+          if (exists) {
+            setNicknameCheckStatus('taken');
+            setNicknameChecked(false);
+            setError('ì´ë¯¸ ì‚¬ìš© ì¤‘ì¸ ë‹‰ë„¤ìž„ìž…ë‹ˆë‹¤.');
+          } else {
+            setNicknameCheckStatus('available');
+            setNicknameChecked(true);
+            setError('');
+          }
+        } catch (err) {
+          setNicknameCheckStatus('');
+          setError('ë‹‰ë„¤ìž„ í™•ì¸ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.');
+        }
+      };
+
+      const handleNicknameChange = (e) => {
+        setNickname(e.target.value);
+        setNicknameChecked(false);
+        setNicknameCheckStatus('');
+        setError('');
+      };
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+          if (isLogin) {
+            await signInWithEmailAndPassword(auth, email, password);
+          } else {
+            if (!nicknameChecked) {
+              setError('ë‹‰ë„¤ìž„ ì¤‘ë³µ í™•ì¸ì„ í•´ì£¼ì„¸ìš”.');
+              setLoading(false);
+              return;
+            }
+
+            if (!validatePassword(password)) {
+              setError('ë¹„ë°€ë²ˆí˜¸ëŠ” ëŒ€ì†Œë¬¸ìž, íŠ¹ìˆ˜ë¬¸ìžë¥¼ í¬í•¨í•˜ì—¬ 8ìž ì´ìƒì´ì–´ì•¼ í•©ë‹ˆë‹¤.');
+              setLoading(false);
+              return;
+            }
+            
+            if (password !== passwordConfirm) {
+              setError('ë¹„ë°€ë²ˆí˜¸ê°€ ì¼ì¹˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.');
+              setLoading(false);
+              return;
+            }
+
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            
+            await setDoc(doc(db, 'users', userCredential.user.uid), {
+              nickname,
+              email,
+              createdAt: Timestamp.now()
+            });
+
+            await updateProfile(userCredential.user, { displayName: nickname });
+            
+            onAuthSuccess();
+          }
+        } catch (err) {
+          if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+            setError('ì´ë©”ì¼ ë˜ëŠ” ë¹„ë°€ë²ˆí˜¸ë¥¼ ë‹¤ì‹œ í•œ ë²ˆ í™•ì¸í•´ì£¼ì„¸ìš”.');
+          } else if (err.code === 'auth/email-already-in-use') {
+            setError('ì´ë¯¸ ì‚¬ìš© ì¤‘ì¸ ì´ë©”ì¼ìž…ë‹ˆë‹¤.');
+          } else {
+            setError('ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤. ë‹¤ì‹œ ì‹œë„í•´ì£¼ì„¸ìš”.');
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const handlePasswordReset = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+          await sendPasswordResetEmail(auth, resetEmail);
+          showToast('ë¹„ë°€ë²ˆí˜¸ ìž¬ì„¤ì • ì´ë©”ì¼ì´ ì „ì†¡ë˜ì—ˆìŠµë‹ˆë‹¤.');
+          setShowPasswordReset(false);
+          setResetEmail('');
+        } catch (err) {
+          setError('ì´ë©”ì¼ ì „ì†¡ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤. ì´ë©”ì¼ì„ í™•ì¸í•´ì£¼ì„¸ìš”.');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <>
+          <button id="add-run-modal-trigger" className="hidden" />
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-800 via-navy-700 to-navy-600 p-4">
+            <div className="auth-card bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+              <div className="text-center mb-8">
+                <h1 className="text-4xl font-bold mb-2 text-navy-900">RunLog</h1>
+                <p className="text-navy-600 text-base">ë‹¹ì‹ ì˜ ëŸ¬ë‹ ì—¬ì •ì„ ê¸°ë¡í•˜ì„¸ìš”</p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {!isLogin && (
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">ë‹‰ë„¤ìž„</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={nickname}
+                        onChange={handleNicknameChange}
+                        className={`flex-1 min-w-0 px-3 sm:px-4 py-3 rounded-lg border-2 transition-colors text-sm sm:text-base ${
+                          nicknameCheckStatus === 'available' 
+                            ? 'border-green-500 focus:border-green-600' 
+                            : nicknameCheckStatus === 'taken'
+                            ? 'border-red-500 focus:border-red-600'
+                            : 'border-navy-200 focus:border-navy-600'
+                        } focus:outline-none`}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={handleNicknameCheck}
+                        disabled={nicknameCheckStatus === 'checking' || !nickname.trim()}
+                        className="px-3 sm:px-4 py-3 bg-navy-600 text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-navy-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex-shrink-0"
+                      >
+                        {nicknameCheckStatus === 'checking' ? 'í™•ì¸ì¤‘' : 'ì¤‘ë³µí™•ì¸'}
+                      </button>
+                    </div>
+                    {nicknameCheckStatus === 'available' && (
+                      <p className="text-xs text-green-600 mt-1">âœ“ ì‚¬ìš© ê°€ëŠ¥í•œ ë‹‰ë„¤ìž„ìž…ë‹ˆë‹¤.</p>
+                    )}
+                    {nicknameCheckStatus === 'taken' && (
+                      <p className="text-xs text-red-600 mt-1">âœ— ì´ë¯¸ ì‚¬ìš© ì¤‘ì¸ ë‹‰ë„¤ìž„ìž…ë‹ˆë‹¤.</p>
+                    )}
+                  </div>
+                )}
+                
+                <div>
+                  <label className="block text-sm font-semibold text-navy-700 mb-2">ì´ë©”ì¼</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none transition-colors"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-navy-700 mb-2">ë¹„ë°€ë²ˆí˜¸</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-3 pr-12 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none transition-colors"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-400 hover:text-navy-600"
+                    >
+                      {showPassword ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  {!isLogin && (
+                    <p className="text-xs text-navy-500 mt-1">ëŒ€ì†Œë¬¸ìž, íŠ¹ìˆ˜ë¬¸ìž í¬í•¨ 8ìž ì´ìƒ</p>
+                  )}
+                </div>
+
+                {!isLogin && (
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">ë¹„ë°€ë²ˆí˜¸ í™•ì¸</label>
+                    <div className="relative">
+                      <input
+                        type={showPasswordConfirm ? "text" : "password"}
+                        value={passwordConfirm}
+                        onChange={(e) => setPasswordConfirm(e.target.value)}
+                        className="w-full px-4 py-3 pr-12 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none transition-colors"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-400 hover:text-navy-600"
+                      >
+                        {showPasswordConfirm ? (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-navy-700 text-white font-semibold py-3 rounded-lg hover:bg-navy-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loading && (
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
+                  {loading ? 'ì²˜ë¦¬ì¤‘...' : (isLogin ? 'ë¡œê·¸ì¸' : 'íšŒì›ê°€ìž…')}
+                </button>
+              </form>
+
+              <div className="mt-6 text-center space-y-2">
+                <div className="text-sm text-navy-600">
+                  {isLogin ? 'ê³„ì •ì´ ì—†ìœ¼ì‹ ê°€ìš”? ' : 'ì´ë¯¸ ê³„ì •ì´ ìžˆìœ¼ì‹ ê°€ìš”? '}
+                  <button
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      setError('');
+                    }}
+                    className="text-navy-700 font-semibold hover:text-navy-900 transition-colors"
+                  >
+                    {isLogin ? 'íšŒì›ê°€ìž…' : 'ë¡œê·¸ì¸'}
+                  </button>
+                </div>
+                
+                {isLogin && (
+                  <button
+                    onClick={() => setShowPasswordReset(true)}
+                    className="text-sm text-navy-600 hover:text-navy-800 transition-colors"
+                  >
+                    ë¹„ë°€ë²ˆí˜¸ ì°¾ê¸°
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {showPasswordReset && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-md slide-up">
+                <h2 className="text-2xl font-bold text-navy-900 mb-4">ë¹„ë°€ë²ˆí˜¸ ì°¾ê¸°</h2>
+                <form onSubmit={handlePasswordReset} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">ì´ë©”ì¼</label>
+                    <input
+                      type="email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                      placeholder="ê°€ìž…í•œ ì´ë©”ì¼ì„ ìž…ë ¥í•˜ì„¸ìš”"
+                      required
+                    />
+                  </div>
+                  {error && (
+                    <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+                      {error}
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 bg-navy-700 text-white font-semibold py-3 rounded-lg hover:bg-navy-800 transition-colors"
+                    >
+                      ì „ì†¡
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPasswordReset(false);
+                        setResetEmail('');
+                        setError('');
+                      }}
+                      className="flex-1 bg-navy-100 text-navy-700 font-semibold py-3 rounded-lg hover:bg-navy-200 transition-colors"
+                    >
+                      ì·¨ì†Œ
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          
+
+          <div className="space-y-3">
+            {displayStats.map(({ raceName, raceType, latestRecord, count, improvement }) => (
+              <div key={`${raceName}_${raceType}`} className="bg-navy-100 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-navy-900 text-sm sm:text-base truncate">{raceName}</h3>
+                    <p className="text-xs text-navy-600 mt-0.5">{count}회 참가 · {getDistanceLabel(raceType)}</p>
+                  </div>
+                  <div className="text-right ml-3 flex-shrink-0">
+                    <div className="text-lg sm:text-xl font-bold text-navy-900">{formatTime(latestRecord.time)}</div>
+                    {improvement && (
+                      <div className={`text-xs font-semibold mt-0.5 ${improvement > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatImprovement(improvement)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="text-xs text-navy-500">
+                  최근 기록: {formatDate(latestRecord.date)}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {!showAll && raceStats.length > 3 && (
+            <button
+              onClick={() => setShowAll(true)}
+              className="w-full mt-3 py-2 text-sm text-navy-600 hover:text-navy-900 font-semibold"
+            >
+              +{raceStats.length - 3}개 대회 더보기
+            </button>
+          )}
+          {showAll && raceStats.length > 3 && (
+            <button
+              onClick={() => setShowAll(false)}
+              className="w-full mt-3 py-2 text-sm text-navy-600 hover:text-navy-900 font-semibold"
+            >
+              접기
+            </button>
+          )}
+        </div>
+      );
+    };
+        })
+        .sort((a, b) => b.count - a.count); // ë§Žì´ ë›´ ëŒ€íšŒ ìˆœ
+
+      if (raceStats.length === 0) return null;
+
+      const formatTime = (seconds) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      };
+
+      const formatImprovement = (seconds) => {
+        const absSeconds = Math.abs(seconds);
+        const m = Math.floor(absSeconds / 60);
+        const s = absSeconds % 60;
+        const sign = seconds > 0 ? 'â†‘' : 'â†“';
+        return `${sign}${m}:${s.toString().padStart(2, '0')}`;
+      };
+
+      return (
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg sm:text-xl font-bold text-navy-900">🏆 대회 기록</h2>
+          </div>
+
+          <div className="space-y-3">
+            {(showHistory ? raceStats : raceStats.slice(0, 3)).map(({ raceName, bestRecord, count, improvement }) => (
+              <div key={raceName} className="bg-navy-100 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-navy-900 text-sm sm:text-base truncate">{raceName}</h3>
+                    <p className="text-xs text-navy-600 mt-0.5">{count}íšŒ ì°¸ê°€</p>
+                  </div>
+                  <div className="text-right ml-3 flex-shrink-0">
+                    <div className="text-lg sm:text-xl font-bold text-navy-900">{formatTime(bestRecord.time)}</div>
+                    {improvement && (
+                      <div className={`text-xs font-semibold mt-0.5 ${improvement > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatImprovement(improvement)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-navy-500">
+                  <span>{bestRecord.raceType === 'HALF' ? 'HALF' : bestRecord.raceType === 'FULL' ? 'FULL' : `${bestRecord.distance}km`}</span>
+                  <span>â€¢</span>
+                  <span>ìµœê³ ê¸°ë¡: {new Date(bestRecord.date).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' }).replace(/\. /g, '.').replace(/\.$/, '')}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {!showHistory && raceStats.length > 3 && (
+            <div className="text-center mt-3">
+              <p className="text-xs text-navy-500">+{raceStats.length - 3}ê°œ ëŒ€íšŒ ë”ë³´ê¸°</p>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+        const RunCard = ({ run, onClick }) => {
+      const getDistanceLabel = () => {
+        if (run.raceType === 'HALF') return 'HALF';
+        if (run.raceType === 'FULL') return 'FULL';
+        return `${run.distance}km`;
+      };
+
+      // 사진이 없는 경우
+      if (!run.photos || run.photos.length === 0) {
+        return (
+          <div className="bg-white overflow-hidden cursor-pointer hover:opacity-90 transition-opacity border border-navy-200" onClick={onClick}>
+            <div className="relative w-full aspect-square bg-gradient-to-br from-navy-50 to-navy-100 flex flex-col items-center justify-center p-4">
+              {run.runType === 'race' && (
+                <div className="absolute top-2 left-2 bg-gradient-to-br from-yellow-400 to-yellow-600 text-white p-1.5 rounded-lg shadow-lg">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 00-1.5 1.5v.5h-1a1 1 0 00-1 1v2a1 1 0 001 1h1v1.5a1.5 1.5 0 001.5 1.5v1a1 1 0 01-1 1H4a1 1 0 01-1-1v-1a1.5 1.5 0 001.5-1.5V16h1a1 1 0 001-1v-2a1 1 0 00-1-1h-1v-.5A1.5 1.5 0 003 10H2.5a1 1 0 01-1-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5a1.5 1.5 0 013 0V4z"/>
+                  </svg>
+                </div>
+              )}
+              
+              {run.isPublic === false && (
+                <div className="absolute top-2 right-2 bg-gray-800 bg-opacity-80 text-white p-1.5 rounded-lg shadow-lg">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+
+              <div className="text-center">
+                <div className="text-sm font-semibold text-navy-600 mb-2">
+                  {run.runType === 'race' ? run.raceName : run.location}
+                </div>
+                <div className="text-3xl font-bold text-navy-900 mb-2">
+                  {formatTime(run.time)}
+                </div>
+                <div className="text-xs text-navy-500">
+                  {getDistanceLabel()} · {formatDate(run.date)}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // 사진이 있는 경우 (기존 코드)
+      return (
+        <div className="bg-white overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" onClick={onClick}>
+          <div className="relative w-full aspect-square bg-navy-100">
+            <img
+              src={run.photos[0]}
+              alt="Run"
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+            
+            {run.photos.length > 1 && (
+              <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
+                <div className="relative w-5 h-5 sm:w-8 sm:h-8">
+                  <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-white rounded-sm absolute top-0 left-0 opacity-60 shadow-lg"></div>
+                  <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-white rounded-sm absolute top-1 left-1 sm:top-1.5 sm:left-1.5 bg-black bg-opacity-30 shadow-lg"></div>
+                </div>
+              </div>
+            )}
+
+            {run.runType === 'race' && (
+              <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-gradient-to-br from-yellow-400 to-yellow-600 text-white p-1 sm:p-2 rounded-md sm:rounded-lg shadow-lg">
+                <svg className="w-3 h-3 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 00-1.5 1.5v.5h-1a1 1 0 00-1 1v2a1 1 0 001 1h1v1.5a1.5 1.5 0 001.5 1.5v1a1 1 0 01-1 1H4a1 1 0 01-1-1v-1a1.5 1.5 0 001.5-1.5V16h1a1 1 0 001-1v-2a1 1 0 00-1-1h-1v-.5A1.5 1.5 0 003 10H2.5a1 1 0 01-1-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5a1.5 1.5 0 013 0V4z"/>
+                </svg>
+              </div>
+            )}
+
+            {run.isPublic === false && (
+              <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 bg-gray-800 bg-opacity-80 text-white p-1 sm:p-1.5 rounded-md sm:rounded-lg shadow-lg">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
+
+            <div className="absolute bottom-0 right-0 bg-gradient-to-tl from-black/90 via-black/60 to-transparent pl-6 pt-6 pb-1.5 pr-1.5 sm:pl-12 sm:pt-12 sm:pb-4 sm:pr-4 rounded-tl-2xl">
+              <div className="text-right">
+                <div className="text-white font-bold text-lg sm:text-4xl leading-tight drop-shadow-lg">
+                  {formatTime(run.time)}
+                </div>
+                <div className="text-white text-[10px] sm:text-base font-medium mt-0.5 sm:mt-1 opacity-90 drop-shadow-lg">
+                  {getDistanceLabel()} · {formatDate(run.date)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+      return (
+        <div className="bg-white overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" onClick={onClick}>
+          {run.photos && run.photos.length > 0 && (
+            <div className="relative w-full aspect-square bg-navy-100">
+              <img
+                src={run.photos[0]}
+                alt="Run"
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+              
+              {run.photos.length > 1 && (
+                <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
+                  <div className="relative w-5 h-5 sm:w-8 sm:h-8">
+                    <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-white rounded-sm absolute top-0 left-0 opacity-60 shadow-lg"></div>
+                    <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-white rounded-sm absolute top-1 left-1 sm:top-1.5 sm:left-1.5 bg-black bg-opacity-30 shadow-lg"></div>
+                  </div>
+                </div>
+              )}
+
+              {run.runType === 'race' && (
+                <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-gradient-to-br from-yellow-400 to-yellow-600 text-white p-1 sm:p-2 rounded-md sm:rounded-lg shadow-lg">
+                  <svg className="w-3 h-3 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 00-1.5 1.5v.5h-1a1 1 0 00-1 1v2a1 1 0 001 1h1v1.5a1.5 1.5 0 001.5 1.5v1a1 1 0 01-1 1H4a1 1 0 01-1-1v-1a1.5 1.5 0 001.5-1.5V16h1a1 1 0 001-1v-2a1 1 0 00-1-1h-1v-.5A1.5 1.5 0 003 10H2.5a1 1 0 01-1-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5a1.5 1.5 0 013 0V4z"/>
+                  </svg>
+                </div>
+              )}
+
+              {run.isPublic === false && (
+                <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 bg-gray-800 bg-opacity-80 text-white p-1 sm:p-1.5 rounded-md sm:rounded-lg shadow-lg">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+
+              <div className="absolute bottom-0 right-0 bg-gradient-to-tl from-black/90 via-black/60 to-transparent pl-6 pt-6 pb-1.5 pr-1.5 sm:pl-12 sm:pt-12 sm:pb-4 sm:pr-4 rounded-tl-2xl">
+                <div className="text-right">
+                  <div className="text-white font-bold text-lg sm:text-4xl leading-tight drop-shadow-lg">
+                    {formatTime(run.time)}
+                  </div>
+                  <div className="text-white text-[10px] sm:text-base font-medium mt-0.5 sm:mt-1 opacity-90 drop-shadow-lg">
+                    {getDistanceLabel()} Â· {new Date(run.date).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' }).replace(/\. /g, '.').replace(/\.$/, '')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const SettingsModal = ({ user, userData, onClose, onSignOut }) => {
+      const [activeView, setActiveView] = useState('menu'); // 'menu', 'nickname', 'password'
+      const [nickname, setNickname] = useState(userData?.nickname || user.displayName || '');
+      const [currentPassword, setCurrentPassword] = useState('');
+      const [newPassword, setNewPassword] = useState('');
+      const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+      const [deletePassword, setDeletePassword] = useState('');
+
+      const handleNicknameUpdate = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+          if (nickname !== (userData?.nickname || user.displayName)) {
+            const nicknameExists = await checkNicknameExists(nickname);
+            if (nicknameExists) {
+              setError('ì´ë¯¸ ì‚¬ìš© ì¤‘ì¸ ë‹‰ë„¤ìž„ìž…ë‹ˆë‹¤.');
+              setLoading(false);
+              return;
+            }
+          }
+
+          await updateProfile(auth.currentUser, { displayName: nickname });
+          await updateDoc(doc(db, 'users', user.uid), { nickname });
+          
+          showToast('ë‹‰ë„¤ìž„ì´ ë³€ê²½ë˜ì—ˆìŠµë‹ˆë‹¤.');
+          setTimeout(() => window.location.reload(), 500);
+        } catch (err) {
+          setError('ë‹‰ë„¤ìž„ ë³€ê²½ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const handlePasswordUpdate = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+          if (!validatePassword(newPassword)) {
+            setError('ë¹„ë°€ë²ˆí˜¸ëŠ” ëŒ€ì†Œë¬¸ìž, íŠ¹ìˆ˜ë¬¸ìžë¥¼ í¬í•¨í•˜ì—¬ 8ìž ì´ìƒì´ì–´ì•¼ í•©ë‹ˆë‹¤.');
+            setLoading(false);
+            return;
+          }
+
+          if (newPassword !== newPasswordConfirm) {
+            setError('ìƒˆ ë¹„ë°€ë²ˆí˜¸ê°€ ì¼ì¹˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.');
+            setLoading(false);
+            return;
+          }
+
+          await signInWithEmailAndPassword(auth, user.email, currentPassword);
+          await updatePassword(auth.currentUser, newPassword);
+          
+          showToast('ë¹„ë°€ë²ˆí˜¸ê°€ ë³€ê²½ë˜ì—ˆìŠµë‹ˆë‹¤.');
+          setActiveView('menu');
+          setCurrentPassword('');
+          setNewPassword('');
+          setNewPasswordConfirm('');
+        } catch (err) {
+          if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+            setError('í˜„ìž¬ ë¹„ë°€ë²ˆí˜¸ê°€ ì¼ì¹˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.');
+          } else {
+            setError('ë¹„ë°€ë²ˆí˜¸ ë³€ê²½ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.');
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const handleDeleteAccount = async () => {
+        if (!deletePassword) {
+          showToast('ë¹„ë°€ë²ˆí˜¸ë¥¼ ìž…ë ¥í•´ì£¼ì„¸ìš”.', 'error');
+          return;
+        }
+
+        try {
+          // ë¹„ë°€ë²ˆí˜¸ ìž¬ì¸ì¦
+          await signInWithEmailAndPassword(auth, user.email, deletePassword);
+
+          // Firestore ë°ì´í„° ì‚­ì œ
+          const userDocRef = doc(db, 'users', user.uid);
+          await deleteDoc(userDocRef);
+
+          // ì‚¬ìš©ìž ê¸°ë¡ ì‚­ì œ
+          const runsQuery = query(collection(db, 'runs'), where('userId', '==', user.uid));
+          const runsSnapshot = await getDocs(runsQuery);
+          const deletePromises = runsSnapshot.docs.map(doc => deleteDoc(doc.ref));
+          await Promise.all(deletePromises);
+
+          // Firebase Auth ê³„ì • ì‚­ì œ
+          await deleteUser(auth.currentUser);
+          
+          showToast('íšŒì› íƒˆí‡´ê°€ ì™„ë£Œë˜ì—ˆìŠµë‹ˆë‹¤.');
+        } catch (error) {
+          console.error('íšŒì› íƒˆí‡´ ì‹¤íŒ¨:', error);
+          if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+            showToast('ë¹„ë°€ë²ˆí˜¸ê°€ ì¼ì¹˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.', 'error');
+          } else if (error.code === 'auth/requires-recent-login') {
+            showToast('ë³´ì•ˆì„ ìœ„í•´ ë‹¤ì‹œ ë¡œê·¸ì¸ í›„ íƒˆí‡´í•´ì£¼ì„¸ìš”.', 'error');
+            onSignOut();
+          } else {
+            showToast('íšŒì› íƒˆí‡´ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.', 'error');
+          }
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto slide-up">
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b border-navy-100 sticky top-0 bg-white z-10">
+              <h2 className="text-lg sm:text-xl font-bold text-navy-900">
+                {activeView === 'menu' && 'ì„¤ì •'}
+                {activeView === 'nickname' && 'ë‹‰ë„¤ìž„ ë³€ê²½'}
+                {activeView === 'password' && 'ë¹„ë°€ë²ˆí˜¸ ë³€ê²½'}
+              </h2>
+              <button
+                onClick={onClose}
+                className="text-navy-400 hover:text-navy-600 transition-colors p-1"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-4 sm:p-6">
+              {activeView === 'menu' && (
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setActiveView('nickname')}
+                    className="w-full text-left px-4 py-3 rounded-lg hover:bg-navy-50 transition-colors text-navy-700 font-medium text-sm"
+                  >
+                    ë‹‰ë„¤ìž„ ë³€ê²½
+                  </button>
+                  <button
+                    onClick={() => setActiveView('password')}
+                    className="w-full text-left px-4 py-3 rounded-lg hover:bg-navy-50 transition-colors text-navy-700 font-medium text-sm"
+                  >
+                    ë¹„ë°€ë²ˆí˜¸ ë³€ê²½
+                  </button>
+
+                  <div className="border-t border-navy-100 my-3"></div>
+
+                  <button
+                    onClick={() => alert('RunLog v1.0.0\n\nëŸ¬ë‹ ê¸°ë¡ì„ ê´€ë¦¬í•˜ëŠ” ì•±ìž…ë‹ˆë‹¤.')}
+                    className="w-full text-left px-4 py-3 rounded-lg hover:bg-navy-50 transition-colors text-navy-700 text-sm"
+                  >
+                    ì•± ì •ë³´
+                  </button>
+                  <button
+                    onClick={() => alert('ì´ìš©ì•½ê´€ íŽ˜ì´ì§€ëŠ” ì¶”í›„ ì¶”ê°€ ì˜ˆì •ìž…ë‹ˆë‹¤.')}
+                    className="w-full text-left px-4 py-3 rounded-lg hover:bg-navy-50 transition-colors text-navy-700 text-sm"
+                  >
+                    ì´ìš©ì•½ê´€
+                  </button>
+                  <button
+                    onClick={() => alert('ê°œì¸ì •ë³´ ì²˜ë¦¬ë°©ì¹¨ íŽ˜ì´ì§€ëŠ” ì¶”í›„ ì¶”ê°€ ì˜ˆì •ìž…ë‹ˆë‹¤.')}
+                    className="w-full text-left px-4 py-3 rounded-lg hover:bg-navy-50 transition-colors text-navy-700 text-sm"
+                  >
+                    ê°œì¸ì •ë³´ ì²˜ë¦¬ë°©ì¹¨
+                  </button>
+                  <button
+                    onClick={() => alert('ë¬¸ì˜: support@runlog.com')}
+                    className="w-full text-left px-4 py-3 rounded-lg hover:bg-navy-50 transition-colors text-navy-700 text-sm"
+                  >
+                    ë¬¸ì˜í•˜ê¸°
+                  </button>
+
+                  <div className="border-t border-navy-100 my-3"></div>
+
+                  <button
+                    onClick={onSignOut}
+                    className="w-full text-left px-4 py-3 rounded-lg hover:bg-navy-50 transition-colors text-navy-700 font-medium text-sm"
+                  >
+                    ë¡œê·¸ì•„ì›ƒ
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 transition-colors text-red-600 font-medium text-sm"
+                  >
+                    íšŒì› íƒˆí‡´
+                  </button>
+                </div>
+              )}
+
+              {activeView === 'nickname' && (
+                <form onSubmit={handleNicknameUpdate} className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">ìƒˆ ë‹‰ë„¤ìž„</label>
+                    <input
+                      type="text"
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
+                      required
+                    />
+                  </div>
+                  {error && (
+                    <div className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs">
+                      {error}
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveView('menu')}
+                      className="flex-1 bg-navy-100 text-navy-700 py-2 rounded-lg hover:bg-navy-200 transition-colors text-sm font-semibold"
+                    >
+                      ì·¨ì†Œ
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 bg-navy-700 text-white py-2 rounded-lg hover:bg-navy-800 transition-colors text-sm font-semibold disabled:opacity-50"
+                    >
+                      {loading ? 'ë³€ê²½ ì¤‘...' : 'ë³€ê²½'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {activeView === 'password' && (
+                <form onSubmit={handlePasswordUpdate} className="space-y-3">
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
+                    placeholder="í˜„ìž¬ ë¹„ë°€ë²ˆí˜¸"
+                    required
+                  />
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
+                    placeholder="ìƒˆ ë¹„ë°€ë²ˆí˜¸"
+                    required
+                  />
+                  <input
+                    type="password"
+                    value={newPasswordConfirm}
+                    onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
+                    placeholder="ìƒˆ ë¹„ë°€ë²ˆí˜¸ í™•ì¸"
+                    required
+                  />
+                  <p className="text-xs text-navy-500">ëŒ€ì†Œë¬¸ìž, íŠ¹ìˆ˜ë¬¸ìž í¬í•¨ 8ìž ì´ìƒ</p>
+                  
+                  {error && (
+                    <div className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs">
+                      {error}
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveView('menu')}
+                      className="flex-1 bg-navy-100 text-navy-700 py-2 rounded-lg hover:bg-navy-200 transition-colors text-sm font-semibold"
+                    >
+                      ì·¨ì†Œ
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 bg-navy-700 text-white py-2 rounded-lg hover:bg-navy-800 transition-colors text-sm font-semibold disabled:opacity-50"
+                    >
+                      {loading ? 'ë³€ê²½ ì¤‘...' : 'ë³€ê²½'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+
+          {showDeleteConfirm && (
+            <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl p-6 max-w-sm w-full modal-content">
+                <h3 className="text-lg font-bold text-navy-900 mb-2">íšŒì› íƒˆí‡´</h3>
+                <p className="text-navy-600 mb-2 text-sm">ì •ë§ë¡œ íƒˆí‡´í•˜ì‹œê² ìŠµë‹ˆê¹Œ?</p>
+                <p className="text-red-600 mb-4 text-sm font-semibold">âš ï¸ ëª¨ë“  ë°ì´í„°ê°€ ì‚­ì œë˜ë©° ë³µêµ¬í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.</p>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-navy-700 mb-2">ë¹„ë°€ë²ˆí˜¸ í™•ì¸</label>
+                  <input
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
+                    placeholder="ë¹„ë°€ë²ˆí˜¸ë¥¼ ìž…ë ¥í•˜ì„¸ìš”"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDeleteAccount}
+                    className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold"
+                  >
+                    íƒˆí‡´
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setDeletePassword('');
+                    }}
+                    className="flex-1 bg-navy-100 text-navy-700 py-2 rounded-lg hover:bg-navy-200 transition-colors text-sm font-semibold"
+                  >
+                    ì·¨ì†Œ
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const RunDetailModal = ({ run, onClose, onDelete, onEdit }) => {
+      const [currentImageIndex, setCurrentImageIndex] = useState(0);
+      const [showMenu, setShowMenu] = useState(false);
+      const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+      const [touchStart, setTouchStart] = useState(null);
+      const [touchEnd, setTouchEnd] = useState(null);
+
+      const minSwipeDistance = 50;
+
+      const onTouchStart = (e) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+      };
+
+      const onTouchMove = (e) => {
+        setTouchEnd(e.targetTouches[0].clientX);
+      };
+
+      const onTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        
+        const distance = touchStart - touchEnd;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+        
+        if (isLeftSwipe) {
+          goToNext();
+        }
+        if (isRightSwipe) {
+          goToPrevious();
+        }
+      };
+
+      const goToPrevious = () => {
+        setCurrentImageIndex((prev) => (prev === 0 ? run.photos.length - 1 : prev - 1));
+      };
+
+      const goToNext = () => {
+        setCurrentImageIndex((prev) => (prev === run.photos.length - 1 ? 0 : prev + 1));
+      };
+
+      const handleDelete = async () => {
+        try {
+          await deleteDoc(doc(db, 'runs', run.id));
+          onDelete();
+          onClose();
+        } catch (error) {
+          console.error('ì‚­ì œ ì‹¤íŒ¨:', error);
+          showToast('ê¸°ë¡ ì‚­ì œì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.', 'error');
+        }
+      };
+
+      const handleShare = () => {
+        alert('ê³µìœ  ê¸°ëŠ¥ì€ ì¶”í›„ êµ¬í˜„ ì˜ˆì •ìž…ë‹ˆë‹¤.');
+      };
+
+      const getDistanceLabel = () => {
+        if (run.raceType === 'HALF') return 'HALF';
+        if (run.raceType === 'FULL') return 'FULL';
+        return `${run.distance}km`;
+      };
+
+      return (
+        <div className="fixed inset-0 bg-white z-50 overflow-y-auto pb-safe">
+          <div className="min-h-screen">
+            <div className="sticky top-0 bg-white border-b border-navy-100 z-10 shadow-sm">
+              <div className="flex items-center justify-between p-3 sm:p-4">
+                <button onClick={onClose} className="text-navy-900 p-1 -ml-1">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <h2 className="text-base sm:text-lg font-bold text-navy-900">ê²Œì‹œë¬¼</h2>
+                <div className="relative">
+                  <button onClick={() => setShowMenu(!showMenu)} className="text-navy-900 p-1 -mr-1">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    </svg>
+                  </button>
+                  {showMenu && (
+                    <div className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-navy-200 py-2 w-32 z-20">
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          onEdit(run);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-navy-700 hover:bg-navy-50 transition-colors"
+                      >
+                        ìˆ˜ì •
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          setShowDeleteConfirm(true);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        ì‚­ì œ
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {run.photos && run.photos.length > 0 && (
+              <div className="flex justify-center bg-white">
+                <div 
+                  className="relative w-full max-w-4xl"
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
+                >
+                  <img
+                    src={run.photos[currentImageIndex]}
+                    alt="Run"
+                    className="w-full h-auto object-contain"
+                  />
+                  
+                  {run.photos.length > 1 && (
+                    <>
+                      {currentImageIndex > 0 && (
+                        <button
+                          className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 text-navy-900 w-8 h-8 rounded-full items-center justify-center hover:bg-opacity-100 transition-all shadow-md"
+                          onClick={goToPrevious}
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                      )}
+                      
+                      {currentImageIndex < run.photos.length - 1 && (
+                        <button
+                          className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 text-navy-900 w-8 h-8 rounded-full items-center justify-center hover:bg-opacity-100 transition-all shadow-md"
+                          onClick={goToNext}
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      )}
+
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                        {run.photos.map((_, idx) => (
+                          <div
+                            key={idx}
+                            className={`w-1.5 h-1.5 rounded-full transition-all ${
+                              idx === currentImageIndex ? 'bg-navy-700 w-6' : 'bg-navy-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white max-w-4xl mx-auto">
+              <div className="pb-8">
+              <div className="flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 border-b border-navy-100">
+                <button className="hover:opacity-60 transition-opacity p-1">
+                  <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </button>
+                <button className="hover:opacity-60 transition-opacity p-1">
+                  <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </button>
+                <button onClick={handleShare} className="hover:opacity-60 transition-opacity p-1">
+                  <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                </button>
+                <button className="ml-auto hover:opacity-60 transition-opacity p-1">
+                  <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="px-3 sm:px-4 py-3 sm:py-4">
+                <div className="mb-3 sm:mb-4">
+                  <span className="font-bold text-navy-900 text-base sm:text-lg">
+                    {run.runType === 'race' ? run.raceName : run.location}
+                  </span>
+                </div>
+
+                <div className="mb-3 sm:mb-4">
+                  <div className="text-3xl sm:text-4xl font-bold text-navy-900 mb-2">
+                    {formatTime(run.time)}
+                  </div>
+                  <div className="text-xs sm:text-sm text-navy-600">
+                    {getDistanceLabel()} Â· {formatDate(run.date)}
+                  </div>
+                </div>
+
+                {run.memo && (
+                  <p className="text-sm text-navy-700 mb-4 leading-relaxed">{run.memo}</p>
+                )}
+
+                <p className="text-xs text-navy-400">
+                  ê²Œì‹œ: {run.createdAt?.toDate ? 
+                    run.createdAt.toDate().toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }) :
+                    new Date(run.createdAt).toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+
+          </div>
+            </div>
+          </div>
+
+          {showDeleteConfirm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl p-6 max-w-sm modal-content">
+                <h3 className="text-lg font-bold text-navy-900 mb-2">ê¸°ë¡ ì‚­ì œ</h3>
+                <p className="text-navy-600 mb-4 text-sm">ì´ ê¸°ë¡ì„ ì •ë§ ì‚­ì œí•˜ì‹œê² ìŠµë‹ˆê¹Œ?</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDelete}
+                    className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold"
+                  >
+                    ì‚­ì œ
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 bg-navy-100 text-navy-700 py-2 rounded-lg hover:bg-navy-200 transition-colors text-sm font-semibold"
+                  >
+                    ì·¨ì†Œ
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const AddRunForm = ({ user, onRunAdded, editingRun, onEditComplete }) => {
+      // 모달 열기 트리거
+      useEffect(() => {
+        const trigger = document.getElementById('add-run-modal-trigger');
+        if (trigger) {
+          trigger.onclick = () => setIsOpen(true);
+        }
+      }, []);
+
+      const [isOpen, setIsOpen] = useState(false);
+      const [runType, setRunType] = useState('race');
+      const [formData, setFormData] = useState({
+        date: new Date().toISOString().split('T')[0],
+        distanceType: '5K',
+        customDistance: '',
+        hours: '0',
+        minutes: '0',
+        seconds: '0',
+        location: '',
+        raceName: '',
+        memo: '',
+        isPublic: true
+      });
+      const [photos, setPhotos] = useState([]);
+      const [photoPreviews, setPhotoPreviews] = useState([]);
+      const [availableRaces, setAvailableRaces] = useState([]);
+      const [loading, setLoading] = useState(false);
+
+      useEffect(() => {
+        if (editingRun) {
+          setIsOpen(true);
+          setRunType(editingRun.runType);
+          
+          const timeHours = Math.floor(editingRun.time / 3600);
+          const timeMinutes = Math.floor((editingRun.time % 3600) / 60);
+          const timeSeconds = editingRun.time % 60;
+
+          // ëŒ€íšŒëª…ì´ RACE_DATABASEì— ìžˆëŠ”ì§€ í™•ì¸
+          const isKnownRace = RACE_DATABASE.some(race => race.name === editingRun.raceName);
+          const raceNameValue = isKnownRace ? editingRun.raceName : 'CUSTOM';
+
+          setFormData({
+            date: editingRun.date,
+            distanceType: editingRun.raceType || 'CUSTOM',
+            customDistance: editingRun.raceType === 'CUSTOM' ? editingRun.distance.toString() : '',
+            hours: timeHours.toString(),
+            minutes: timeMinutes.toString(),
+            seconds: timeSeconds.toString(),
+            location: editingRun.location || '',
+            raceName: raceNameValue,
+            customRaceName: !isKnownRace ? editingRun.raceName : '',
+            memo: editingRun.memo || '',
+            isPublic: editingRun.isPublic !== false
+          });
+
+          setPhotoPreviews(editingRun.photos || []);
+          setPhotos([]);
+        }
+      }, [editingRun]);
+
+      useEffect(() => {
+        if (runType === 'race' && formData.date) {
+          const races = RACE_DATABASE.filter(race => race.date === formData.date);
+          setAvailableRaces(races);
+        }
+      }, [runType, formData.date]);
+
+      const handlePhotoChange = async (e) => {
+        const files = Array.from(e.target.files);
+        const currentPhotoCount = photoPreviews.length;
+        const availableSlots = 3 - currentPhotoCount;
+        
+        if (availableSlots <= 0) {
+          return; // ì´ë¯¸ 3ìž¥
+        }
+        
+        // ë‚¨ì€ ìŠ¬ë¡¯ë§Œí¼ë§Œ ì¶”ê°€
+        const filesToAdd = files.slice(0, availableSlots);
+        
+        const previews = await Promise.all(filesToAdd.map(file => {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+          });
+        }));
+        
+        setPhotos([...photos, ...filesToAdd]);
+        setPhotoPreviews([...photoPreviews, ...previews]);
+        
+        // input ì´ˆê¸°í™”
+        e.target.value = '';
+      };
+
+      const removePhoto = (index) => {
+        setPhotos(photos.filter((_, i) => i !== index));
+        setPhotoPreviews(photoPreviews.filter((_, i) => i !== index));
+      };
+
+      const handleClose = () => {
+        setIsOpen(false);
+        setFormData({
+          date: new Date().toISOString().split('T')[0],
+          distanceType: '5K',
+          customDistance: '',
+          hours: '0',
+          minutes: '0',
+          seconds: '0',
+          location: '',
+          raceName: '',
+          memo: '',
+          isPublic: true
+        });
+        setPhotos([]);
+        setPhotoPreviews([]);
+        if (editingRun) {
+          onEditComplete();
+        }
+      };
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+          const totalSeconds = parseInt(formData.hours) * 3600 + 
+                              parseInt(formData.minutes) * 60 + 
+                              parseInt(formData.seconds);
+          
+          let distance;
+          let raceType;
+          
+          if (formData.distanceType === 'CUSTOM') {
+            distance = parseFloat(formData.customDistance);
+            raceType = 'CUSTOM';
+          } else {
+            distance = RACE_TYPES[formData.distanceType];
+            raceType = formData.distanceType;
+          }
+
+          const photoURLs = [];
+          
+          const existingPhotos = photoPreviews.filter(p => p.startsWith('http'));
+          photoURLs.push(...existingPhotos);
+          
+          for (const photo of photos) {
+            const compressed = await compressImage(photo);
+            const photoRef = ref(storage, `runs/${user.uid}/${Date.now()}_${Math.random()}`);
+            await uploadBytes(photoRef, compressed);
+            const url = await getDownloadURL(photoRef);
+            photoURLs.push(url);
+          }
+
+          const runData = {
+            userId: user.uid,
+            runType,
+            date: formData.date,
+            distance,
+            time: totalSeconds,
+            pace: calculatePace(distance, totalSeconds),
+            location: runType === 'casual' ? formData.location : '',
+            raceName: runType === 'race' ? (formData.raceName === 'CUSTOM' ? formData.customRaceName : formData.raceName) : '',
+            memo: formData.memo,
+            photos: photoURLs,
+            isPublic: formData.isPublic,
+            raceType,
+            ...(editingRun ? {} : { createdAt: Timestamp.now() })
+          };
+
+          if (editingRun) {
+            await updateDoc(doc(db, 'runs', editingRun.id), runData);
+            onEditComplete();
+          } else {
+            await addDoc(collection(db, 'runs'), runData);
+            onRunAdded();
+          }
+          
+          handleClose();
+        } catch (error) {
+          console.error('ê¸°ë¡ ì €ìž¥ ì‹¤íŒ¨:', error);
+          showToast('ê¸°ë¡ ì €ìž¥ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.', 'error');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <>
+          
+
+          {isOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto modal-content">
+                <div className="flex justify-between items-center p-4 sm:p-6 border-b border-navy-100 sticky top-0 bg-white z-10">
+                  <h2 className="text-xl sm:text-2xl font-bold text-navy-900">{editingRun ? 'ê¸°ë¡ ìˆ˜ì •' : 'ìƒˆ ê¸°ë¡ ë“±ë¡'}</h2>
+                  <button
+                    onClick={handleClose}
+                    className="text-navy-400 hover:text-navy-600 transition-colors p-1"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">êµ¬ë¶„</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setRunType('race')}
+                        className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+                          runType === 'race'
+                            ? 'bg-navy-700 text-white'
+                            : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                        }`}
+                      >
+                        ëŒ€íšŒ
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRunType('casual')}
+                        className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+                          runType === 'casual'
+                            ? 'bg-navy-700 text-white'
+                            : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                        }`}
+                      >
+                        ì¼ìƒ
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">ë‚ ì§œ</label>
+                    <input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({...formData, date: e.target.value})}
+                      max={new Date().toISOString().split("T")[0]}
+                      min="1900-01-01"
+                      className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  {runType === 'race' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-semibold text-navy-700 mb-2">ëŒ€íšŒëª…</label>
+                        <select
+                          value={formData.raceName}
+                          onChange={(e) => setFormData({...formData, raceName: e.target.value})}
+                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none appearance-none bg-white"
+                          style={{ backgroundImage: "url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.5em 1.5em', paddingRight: '3rem' }}
+                          required
+                        >
+                          <option value="">ëŒ€íšŒë¥¼ ì„ íƒí•˜ì„¸ìš”</option>
+                          {availableRaces.map(race => (
+                            <option key={race.id} value={race.name}>{race.name}</option>
+                          ))}
+                          <option value="CUSTOM">ì§ì ‘ ìž…ë ¥</option>
+                        </select>
+                      </div>
+                      
+                      {formData.raceName === 'CUSTOM' && (
+                        <div>
+                          <label className="block text-sm font-semibold text-navy-700 mb-2">ëŒ€íšŒëª… ì§ì ‘ ìž…ë ¥</label>
+                          <input
+                            type="text"
+                            value={formData.customRaceName || ''}
+                            onChange={(e) => setFormData({...formData, customRaceName: e.target.value})}
+                            className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                            placeholder="ëŒ€íšŒëª…ì„ ìž…ë ¥í•˜ì„¸ìš”"
+                            required
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {runType === 'casual' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-navy-700 mb-2">ìž¥ì†Œ</label>
+                      <input
+                        type="text"
+                        value={formData.location}
+                        onChange={(e) => setFormData({...formData, location: e.target.value})}
+                        className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                        placeholder="ì˜¬ë¦¼í”½ê³µì›"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">ê±°ë¦¬</label>
+                    <div className="grid grid-cols-5 gap-2 mb-2">
+                      {['5K', '10K', 'HALF', 'FULL', 'CUSTOM'].map(type => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setFormData({...formData, distanceType: type})}
+                          className={`py-2 rounded-lg font-semibold text-sm transition-colors ${
+                            formData.distanceType === type
+                              ? 'bg-navy-700 text-white'
+                              : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                          }`}
+                        >
+                          {type === 'CUSTOM' ? 'ì§ì ‘ìž…ë ¥' : type}
+                        </button>
+                      ))}
+                    </div>
+                    {formData.distanceType === 'CUSTOM' && (
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.customDistance}
+                        onChange={(e) => setFormData({...formData, customDistance: e.target.value})}
+                        className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                        placeholder="ê±°ë¦¬ ìž…ë ¥ (km)"
+                        required
+                      />
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">ê¸°ë¡ ì‹œê°„</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <input
+                          type="number"
+                          min="0"
+                          value={formData.hours}
+                          onChange={(e) => setFormData({...formData, hours: e.target.value})}
+                          onFocus={(e) => e.target.value === '0' && setFormData({...formData, hours: ''})}
+                          onBlur={(e) => !e.target.value && setFormData({...formData, hours: '0'})}
+                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-center"
+                          placeholder="0"
+                        />
+                        <div className="text-xs text-navy-500 text-center mt-1">ì‹œê°„</div>
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          value={formData.minutes}
+                          onChange={(e) => setFormData({...formData, minutes: e.target.value})}
+                          onFocus={(e) => e.target.value === '0' && setFormData({...formData, minutes: ''})}
+                          onBlur={(e) => !e.target.value && setFormData({...formData, minutes: '0'})}
+                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-center"
+                          placeholder="0"
+                        />
+                        <div className="text-xs text-navy-500 text-center mt-1">ë¶„</div>
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          value={formData.seconds}
+                          onChange={(e) => setFormData({...formData, seconds: e.target.value})}
+                          onFocus={(e) => e.target.value === '0' && setFormData({...formData, seconds: ''})}
+                          onBlur={(e) => !e.target.value && setFormData({...formData, seconds: '0'})}
+                          className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-center"
+                          placeholder="0"
+                        />
+                        <div className="text-xs text-navy-500 text-center mt-1">ì´ˆ</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">ì‚¬ì§„ (ìµœëŒ€ 3ìž¥)</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {photoPreviews.map((preview, idx) => (
+                        <div key={idx} className="image-upload-container has-image">
+                          <img src={preview} alt={`Photo ${idx}`} className="image-preview" />
+                          <button
+                            type="button"
+                            onClick={() => removePhoto(idx)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                      {photoPreviews.length < 3 && (
+                        <div className="image-upload-container" onClick={() => document.getElementById('photo-input').click()}>
+                          <div className="upload-placeholder">
+                            <svg className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            <p className="text-xs leading-tight">ì‚¬ì§„<br/>ì¶”ê°€</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      id="photo-input"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">ë©”ëª¨</label>
+                    <textarea
+                      value={formData.memo}
+                      onChange={(e) => setFormData({...formData, memo: e.target.value})}
+                      className="w-full px-4 py-3 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none"
+                      rows="3"
+                      placeholder="ì˜¤ëŠ˜ì˜ ë‹¬ë¦¬ê¸°ëŠ” ì–´ë• ë‚˜ìš”?"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-navy-700 mb-2">ê³µê°œ ì„¤ì •</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({...formData, isPublic: true})}
+                        className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+                          formData.isPublic
+                            ? 'bg-navy-700 text-white'
+                            : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                        }`}
+                      >
+                        ê³µê°œ
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({...formData, isPublic: false})}
+                        className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+                          !formData.isPublic
+                            ? 'bg-navy-700 text-white'
+                            : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                        }`}
+                      >
+                        ë¹„ê³µê°œ
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-navy-700 text-white font-semibold py-4 rounded-lg hover:bg-navy-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {loading && (
+                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    )}
+                    {loading ? 'ì €ìž¥ ì¤‘...' : (editingRun ? 'ìˆ˜ì • ì™„ë£Œ' : 'ê¸°ë¡ ì €ìž¥')}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+        </>
+      );
+    };
+
+    const Feed = ({ user, userData, onShowSettings, onEditRun }) => {
+      const [runs, setRuns] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [selectedRun, setSelectedRun] = useState(null);
+      const [filterType, setFilterType] = useState('all'); // all, race, casual
+      const [searchQuery, setSearchQuery] = useState('');
+
+      const loadRuns = async () => {
+        try {
+          setLoading(true);
+          const q = query(
+            collection(db, 'runs'),
+            where('userId', '==', user.uid),
+            orderBy('date', 'desc')
+          );
+          const querySnapshot = await getDocs(q);
+          const runsData = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setRuns(runsData);
+        } catch (error) {
+          console.error('ê¸°ë¡ ë¡œë“œ ì‹¤íŒ¨:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      useEffect(() => {
+        loadRuns();
+      }, [user]);
+
+      const handleEdit = (run) => {
+        setSelectedRun(null);
+        onEditRun(run);
+      };
+
+      const filteredRuns = runs.filter(run => {
+        // í•„í„° íƒ€ìž… í™•ì¸
+        if (filterType === 'race' && run.runType !== 'race') return false;
+        if (filterType === 'casual' && run.runType !== 'casual') return false;
+        
+        // ê²€ìƒ‰ì–´ í™•ì¸
+        if (searchQuery) {
+          const query = searchQuery.toLowerCase();
+          const raceName = (run.raceName || '').toLowerCase();
+          const location = (run.location || '').toLowerCase();
+          return raceName.includes(query) || location.includes(query);
+        }
+        
+        return true;
+      });
+
+      return (
+        <div>
+          <Profile user={user} userData={userData} runs={runs} />
+          <PersonalRecords runs={runs} />
+          
+          {/* í•„í„° & ê²€ìƒ‰ */}
+          <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 mb-4 space-y-3">
+            {/* í•„í„° íƒ­ */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFilterType('all')}
+                className={`flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition-colors ${
+                  filterType === 'all'
+                    ? 'bg-navy-700 text-white'
+                    : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                }`}
+              >
+                ì „ì²´ ({runs.length})
+              </button>
+              <button
+                onClick={() => setFilterType('race')}
+                className={`flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition-colors ${
+                  filterType === 'race'
+                    ? 'bg-navy-700 text-white'
+                    : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                }`}
+              >
+                ëŒ€íšŒ ({runs.filter(r => r.runType === 'race').length})
+              </button>
+              <button
+                onClick={() => setFilterType('casual')}
+                className={`flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition-colors ${
+                  filterType === 'casual'
+                    ? 'bg-navy-700 text-white'
+                    : 'bg-navy-100 text-navy-600 hover:bg-navy-200'
+                }`}
+              >
+                ì¼ìƒ ({runs.filter(r => r.runType === 'casual').length})
+              </button>
+            </div>
+
+            {/* ê²€ìƒ‰ */}
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="ëŒ€íšŒëª… ë˜ëŠ” ìž¥ì†Œ ê²€ìƒ‰..."
+                className="w-full pl-10 pr-4 py-2 rounded-lg border-2 border-navy-200 focus:border-navy-600 focus:outline-none text-sm"
+              />
+              <svg className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-navy-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-400 hover:text-navy-600"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {loading ? (
+            <div className="grid grid-cols-2 gap-1 sm:gap-2">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="bg-white overflow-hidden animate-pulse">
+                  <div className="w-full aspect-square bg-navy-100"></div>
+                </div>
+              ))}
+            </div>
+          ) : runs.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+              <div className="text-5xl mb-3">ðŸƒ</div>
+              <h3 className="text-lg font-bold text-navy-900 mb-2">ì•„ì§ ê¸°ë¡ì´ ì—†ìŠµë‹ˆë‹¤</h3>
+              <p className="text-sm text-navy-600">ì²« ë²ˆì§¸ ë‹¬ë¦¬ê¸° ê¸°ë¡ì„ ì¶”ê°€í•´ë³´ì„¸ìš”!</p>
+            </div>
+          ) : filteredRuns.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+              <div className="text-5xl mb-3">ðŸ”</div>
+              <h3 className="text-lg font-bold text-navy-900 mb-2">ê²€ìƒ‰ ê²°ê³¼ê°€ ì—†ìŠµë‹ˆë‹¤</h3>
+              <p className="text-sm text-navy-600">ë‹¤ë¥¸ í‚¤ì›Œë“œë¡œ ê²€ìƒ‰í•´ë³´ì„¸ìš”</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-1 sm:gap-2">
+              {filteredRuns.map(run => (
+                <RunCard 
+                  key={run.id} 
+                  run={run}
+                  onClick={() => setSelectedRun(run)}
+                />
+              ))}
+            </div>
+          )}
+
+          {selectedRun && (
+            <RunDetailModal
+              run={selectedRun}
+              onClose={() => setSelectedRun(null)}
+              onDelete={loadRuns}
+              onEdit={handleEdit}
+            />
+          )}
+        </div>
+      );
+    };
+
+        const RecordsManagement = ({ user }) => {
+      const [runs, setRuns] = useState([]);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        const loadRuns = async () => {
+          try {
+            const q = query(
+              collection(db, 'runs'),
+              where('userId', '==', user.uid),
+              orderBy('date', 'desc')
+            );
+            const querySnapshot = await getDocs(q);
+            const runsData = querySnapshot.docs.map(doc => ({
+              id: doc.id(),
+              ...doc.data()
+            }));
+            setRuns(runsData);
+          } catch (error) {
+            console.error('기록 로드 실패:', error);
+          } finally {
+            setLoading(false);
+          }
+        };
+        loadRuns();
+      }, [user]);
+
+      const formatTime = (seconds) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      };
+
+      // 거리별 기록 계산
+      const allDistanceTypes = ['5K', '10K', 'HALF', 'FULL'];
+      const distanceRecords = allDistanceTypes.map(type => {
+        const typeRuns = runs.filter(run => run.raceType === type);
+        
+        if (typeRuns.length === 0) {
+          return {
+            type,
+            typeName: type === 'HALF' ? '하프' : type === 'FULL' ? '풀코스' : type,
+            isEmpty: true,
+            encouragement: type === 'FULL' ? '풀코스에 도전해보세요!' : 
+                          type === 'HALF' ? '하프마라톤에 도전해보세요!' :
+                          type === '10K' ? '10K에 도전해보세요!' : '5K에 도전해보세요!'
+          };
+        }
+
+        const best = typeRuns.reduce((prev, curr) => prev.time < curr.time ? prev : curr);
+        const average = typeRuns.reduce((sum, run) => sum + run.time, 0) / typeRuns.length;
+
+        return {
+          type,
+          typeName: type === 'HALF' ? '하프' : type === 'FULL' ? '풀코스' : type,
+          best,
+          average,
+          count: typeRuns.length,
+          isEmpty: false
+        };
+      });
+
+      if (loading) {
+        return (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-navy-700 border-t-transparent"></div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="space-y-4 sm:space-y-6">
+          {/* 거리별 기록 */}
+          <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-bold text-navy-900 mb-4">📏 거리별 기록</h2>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              {distanceRecords.map(record => (
+                <div key={record.type} className={`rounded-lg p-4 ${record.isEmpty ? 'bg-navy-50 border-2 border-dashed border-navy-200' : 'bg-gradient-to-br from-navy-50 to-navy-100'}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base sm:text-lg font-bold text-navy-900">{record.typeName}</h3>
+                    {!record.isEmpty && <span className="text-xs text-navy-600">{record.count}회</span>}
+                  </div>
+                  {record.isEmpty ? (
+                    <div className="text-center py-4">
+                      <div className="text-2xl mb-2 opacity-30">🏃</div>
+                      <p className="text-xs text-navy-500">{record.encouragement}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div>
+                        <div className="text-xs text-navy-600 mb-1">최고 기록</div>
+                        <div className="text-xl sm:text-2xl font-bold text-navy-900">{formatTime(record.best.time)}</div>
+                        <div className="text-xs text-navy-500 mt-1">{formatDate(record.best.date)}</div>
+                      </div>
+                      {record.count > 1 && (
+                        <div>
+                          <div className="text-xs text-navy-600 mb-1">평균 기록</div>
+                          <div className="text-base font-semibold text-navy-700">{formatTime(Math.round(record.average))}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 대회별 기록 */}
+          <RaceHistory runs={runs} />
+        </div>
+      );
+    };
+        loadRuns();
+      }, [user]);
+
+      // ê±°ë¦¬ë³„ ê¸°ë¡ ê³„ì‚°
+      const distanceRecords = ['5K', '10K', 'HALF', 'FULL'].map(type => {
+        const typeRuns = runs.filter(run => run.raceType === type);
+        if (typeRuns.length === 0) return null;
+
+        const best = typeRuns.reduce((prev, curr) => prev.time < curr.time ? prev : curr);
+        const average = typeRuns.reduce((sum, run) => sum + run.time, 0) / typeRuns.length;
+
+        return {
+          type,
+          typeName: type === 'HALF' ? 'í•˜í”„' : type === 'FULL' ? 'í’€ì½”ìŠ¤' : type,
+          best,
+          average,
+          count: typeRuns.length,
+          allRuns: typeRuns.sort((a, b) => new Date(b.date) - new Date(a.date))
+        };
+      }).filter(Boolean);
+
+      const formatTime = (seconds) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      };
+
+      if (loading) {
+        return (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-navy-700 border-t-transparent"></div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="space-y-4 sm:space-y-6">
+          {/* ê±°ë¦¬ë³„ ê¸°ë¡ */}
+          <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-bold text-navy-900 mb-4">ðŸ“ ê±°ë¦¬ë³„ ê¸°ë¡</h2>
+            {distanceRecords.length === 0 ? (
+              <p className="text-center text-navy-500 py-8">ì•„ì§ ê¸°ë¡ì´ ì—†ìŠµë‹ˆë‹¤</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                {distanceRecords.map(({ type, typeName, best, average, count }) => (
+                  <div key={type} className="bg-gradient-to-br from-navy-50 to-navy-100 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-base sm:text-lg font-bold text-navy-900">{typeName}</h3>
+                      <span className="text-xs text-navy-600">{count}íšŒ</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div>
+                        <div className="text-xs text-navy-600 mb-1">ìµœê³  ê¸°ë¡</div>
+                        <div className="text-xl sm:text-2xl font-bold text-navy-900">{formatTime(best.time)}</div>
+                        <div className="text-xs text-navy-500 mt-1">
+                          {new Date(best.date).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' }).replace(/\. /g, '.').replace(/\.$/, '')}
+                        </div>
+                      </div>
+                      {count > 1 && (
+                        <div>
+                          <div className="text-xs text-navy-600 mb-1">í‰ê·  ê¸°ë¡</div>
+                          <div className="text-base font-semibold text-navy-700">{formatTime(Math.round(average))}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ëŒ€íšŒë³„ ê¸°ë¡ */}
+          <RaceHistory runs={runs} />
+        </div>
+      );
+    };
+
+    const App = () => {
+      const [user, setUser] = useState(null);
+      const [userData, setUserData] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [currentTab, setCurrentTab] = useState('myrecords'); // myrecords, stats
+      const [showSettings, setShowSettings] = useState(false);
+      const [editingRun, setEditingRun] = useState(null);
+
+      useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          setUser(user);
+          
+          if (user) {
+            try {
+              const userDoc = await getDoc(doc(db, 'users', user.uid));
+              if (userDoc.exists()) {
+                setUserData(userDoc.data());
+              }
+            } catch (error) {
+              console.error('ì‚¬ìš©ìž ë°ì´í„° ë¡œë“œ ì‹¤íŒ¨:', error);
+            }
+          }
+          
+          setLoading(false);
+        });
+
+        return () => unsubscribe();
+      }, []);
+
+      const handleSignOut = async () => {
+        try {
+          await signOut(auth);
+        } catch (error) {
+          console.error('ë¡œê·¸ì•„ì›ƒ ì‹¤íŒ¨:', error);
+        }
+      };
+
+      if (loading) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-800 via-navy-700 to-navy-600">
+            <div className="text-white text-xl font-semibold">Loading...</div>
+          </div>
+        );
+      }
+
+      if (!user) {
+        return <AuthForm onAuthSuccess={() => {}} />;
+      }
+
+      return (
+        <div className="min-h-screen bg-navy-50">
+          <header className="bg-white shadow-sm sticky top-0 z-40">
+            <div className="max-w-4xl mx-auto px-4 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+              <h1 className="text-xl sm:text-2xl font-bold text-navy-900">RunLog</h1>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <button
+                  onClick={() => document.getElementById('settings-trigger').click()}
+                  className="text-navy-700 hover:text-navy-900 transition-colors p-1"
+                >
+                  <svg className="w-6 h-6 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-32">
+            {currentTab === 'myrecords' && (
+              <Feed 
+                user={user} 
+                userData={userData}
+                onShowSettings={() => setShowSettings(true)}
+                onEditRun={setEditingRun}
+              />
+            )}
+            {currentTab === 'stats' && <RecordsManagement user={user} />}
+          </main>
+
+          {/* ê³µí†µ ì»´í¬ë„ŒíŠ¸ */}
+          <AddRunForm 
+            user={user} 
+            onRunAdded={() => window.location.reload()} 
+            editingRun={editingRun} 
+            onEditComplete={() => {
+              setEditingRun(null);
+              window.location.reload();
+            }} 
+          />
+
+          {showSettings && (
+            <SettingsModal
+              user={user}
+              userData={userData}
+              onClose={() => setShowSettings(false)}
+              onSignOut={handleSignOut}
+            />
+          )}
+
+          {/* íŠ¸ë¦¬ê±° ë²„íŠ¼ */}
+          <button
+            id="add-run-trigger"
+            onClick={() => document.querySelector('.fixed.bottom-8.right-8').click()}
+            className="hidden"
+          />
+          <button
+            id="settings-trigger"
+            onClick={() => setShowSettings(true)}
+            className="hidden"
+          />
+
+          {/* í•˜ë‹¨ íƒ­ ë„¤ë¹„ê²Œì´ì…˜ */}
+          <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-navy-200 z-50">
+            <div className="max-w-4xl mx-auto px-4 py-3 flex justify-around items-center">
+              <button
+                onClick={() => setCurrentTab('myrecords')}
+                className={`flex flex-col items-center gap-1 transition-colors ${
+                  currentTab === 'myrecords' ? 'text-navy-900' : 'text-navy-400'
+                }`}
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth={currentTab === 'myrecords' ? '2.5' : '1.5'} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setCurrentTab('stats')}
+                className={`flex flex-col items-center gap-1 transition-colors ${
+                  currentTab === 'stats' ? 'text-navy-900' : 'text-navy-400'
+                }`}
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth={currentTab === 'stats' ? '2.5' : '1.5'} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </button>
+            </div>
+          </nav>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
